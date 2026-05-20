@@ -7,15 +7,6 @@ import ModifierHelpers from "../helpers/modifiers.js";
  */
 export class ActorFFG extends Actor {
 
-  // returns true if EditMode is not enabled, false otherwise. sends warning notification if EditMode is enabled and sendWarn is true
-  verifyEditModeIsNotEnabled(sendWarn = true){
-    const result = !this.getFlag("starwarsffg", "config.enableEditMode");
-    if(sendWarn && !result) {
-      ui.notifications.warn("Can't do this while EditMode is enabled");
-    }
-      return result;
-  }
-
   static async create(data, options) {
     const createData = data;
 
@@ -29,33 +20,18 @@ export class ActorFFG extends Actor {
         createData.prototypeToken = {
           actorLink: false,
           disposition: CONST.TOKEN_DISPOSITIONS.HOSTILE,
-          bar1: {
-            attribute: "stats.wounds",
-          },
         };
         break;
       case "character":
         createData.prototypeToken = {
           actorLink: true,
           disposition: CONST.TOKEN_DISPOSITIONS.FRIENDLY,
-          bar1: {
-            attribute: "stats.wounds",
-          },
-          bar2: {
-            attribute: "stats.strain",
-          },
         };
         break;
       case "rival":
         createData.prototypeToken = {
           actorLink: false,
           disposition: CONST.TOKEN_DISPOSITIONS.HOSTILE,
-          bar1: {
-            attribute: "stats.wounds",
-          },
-          bar2: {
-            attribute: "stats.strain",
-          },
           prependAdjective: game.settings.get("starwarsffg", "RivalTokenPrepend"),
         };
         break;
@@ -63,23 +39,6 @@ export class ActorFFG extends Actor {
         createData.prototypeToken = {
           actorLink: true,
           disposition: CONST.TOKEN_DISPOSITIONS.HOSTILE,
-          bar1: {
-            attribute: "stats.wounds",
-          },
-          bar2: {
-            attribute: "stats.strain",
-          },
-        };
-        break;
-      case "vehicle":
-        createData.prototypeToken = {
-          actorLink: true,
-          bar1: {
-            attribute: "stats.hullTrauma",
-          },
-          bar2: {
-            attribute: "stats.systemStrain",
-          },
         };
         break;
     }
@@ -132,12 +91,9 @@ export class ActorFFG extends Actor {
         // get the wounds without brawn modifying it, then add the new brawn value in
         const originalWounds = this.system.stats?.wounds.max;
         const originalWoundsWithoutBrawn = originalWounds - originalBrawn;
-        const updatedWounds = originalWoundsWithoutBrawn + parseInt(updatedBrawn);
+        const updatedWounds = originalWoundsWithoutBrawn + updatedBrawn;
         if (!Object.keys(changes.system).includes("stats")) {
           changes.system.stats = {};
-        }
-        if (changes.system.characteristics?.Brawn?.value) {
-          changes.system.stats.Brawn = changes.system.characteristics.Brawn;
         }
         CONFIG.logger.debug(`The character sheet showed ${originalWounds} wounds, while that value without Brawn was ${originalWoundsWithoutBrawn}. Updating to be ${updatedWounds}`);
         changes.system.stats = foundry.utils.mergeObject(
@@ -161,30 +117,11 @@ export class ActorFFG extends Actor {
             }
           }
         );
-        // repeat the above process, but for encumbrance threshold
-        const originalEncumbrance = this.system.stats?.encumbrance.max;
-        const originalEncumbranceWithoutBrawn = originalEncumbrance - originalBrawn;
-        const updatedEncumbrance = originalEncumbranceWithoutBrawn + parseInt(updatedBrawn);
-        CONFIG.logger.debug(`The character sheet showed ${originalEncumbrance} encumbrance max, while that value without Brawn was ${originalEncumbranceWithoutBrawn}. Updating to be ${updatedEncumbrance}`);
-        changes.system.stats = foundry.utils.mergeObject(
-          changes.system.stats,
-          {
-            encumbrance: {
-              max: updatedEncumbrance,
-            }
-          }
-        );
       }
       const originalWillpower = this.system.characteristics.Willpower.value;
       const updatedWillpower = changes.system?.characteristics?.Willpower?.value;
       if (originalWillpower !== undefined && updatedWillpower !== undefined && originalWillpower !== updatedWillpower) {
         CONFIG.logger.debug(`Detected modified Willpower (${originalWillpower} -> ${updatedWillpower}, updating derived values`);
-        if (!Object.keys(changes.system).includes("stats")) {
-          changes.system.stats = {};
-        }
-        if (changes.system.characteristics?.Willpower?.value) {
-          changes.system.stats.Willpower = changes.system.characteristics.Willpower;
-        }
         if (this.system.stats?.strain) {
           // get the soak without willpower modifying it, then add the new willpower value in
           const originalStrain = this.system.stats?.strain.max;
@@ -209,6 +146,7 @@ export class ActorFFG extends Actor {
    * Augment the basic actor data with additional dynamic data.
    */
   prepareDerivedData() {
+    CONFIG.logger.debug(`Preparing Actor Data ${this.type}`);
     const actor = this;
     const data = actor.system;
     const flags = actor.flags;
@@ -282,12 +220,6 @@ export class ActorFFG extends Actor {
         data.skills[skill].label = localizedField;
       }
     }
-
-    // Create list of active effects changing this actor
-    data.effects = actorData.effects.contents;
-    actorData.items.forEach(item => {
-      data.effects.push(...item.effects.contents);
-    });
 
     if (["character", "nemesis", "rival", "minion"].includes(actorData.type)) {
       if (game.settings.get("starwarsffg", "enableSoakCalc")) {
@@ -468,10 +400,8 @@ export class ActorFFG extends Actor {
       });
 
       if (index < 0 || !item.isRanked) {
-        item.isDirectlyAdded = true;
         globalTalentList.push(item);
       } else {
-        globalTalentList[index].isDirectlyAdded = true;
         globalTalentList[index].source.push({
           type: element?.flags?.starwarsffg?.fromSpecies ? "species" : "talent",
           typeLabel: element?.flags?.starwarsffg?.fromSpecies ? "SWFFG.Species" : "SWFFG.Talent",
@@ -523,7 +453,7 @@ export class ActorFFG extends Actor {
           obligation += parseInt(item.magnitude, 10);
         }
       });
-      data.obligations.value = obligation;
+      data.obligation.value = obligation;
     }
 
     if (data?.dutylist && Object.keys(data.dutylist).length > 0) {
@@ -708,7 +638,7 @@ export class ActorFFG extends Actor {
 
     // Determine the updates to make to the actor data
     let updates;
-    if (isBar && ["stats.wounds", "stats.strain", "stats.hullTrauma", "stats.systemStrain"].includes(attribute)) {
+    if (isBar && attribute === "stats.wounds") {
       updates = {[`system.${attribute}.value`]: Math.max(update, 0)};
     } else if (isBar) {
       updates = {[`system.${attribute}.value`]: Math.clamp(update, 0, attr.max)};

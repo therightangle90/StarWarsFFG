@@ -21,7 +21,7 @@ export default class ImportHelpers {
           if (currentSource !== paths[i]) {
             currentSource = `${currentSource}/${paths[i]}`;
           }
-          await foundry.applications.apps.FilePicker.createDirectory(startingSource, `${currentSource}`, { bucket: null });
+          await FilePicker.createDirectory(startingSource, `${currentSource}`, { bucket: null });
         } catch (err) {
           CONFIG.logger.debug(`Error verifying path ${startingSource}, ${path}`, err);
         }
@@ -2345,7 +2345,7 @@ export default class ImportHelpers {
       CONFIG.temporary[pack.collection][data.flags.starwarsffg.ffgimportid] = foundry.utils.deepClone(crt);
       return crt;
     } else {
-      CONFIG.logger.debug(`Found existing ${type} ${dataType} ${data.name}`);
+      CONFIG.logger.debug(`Found existing ${type} ${dataType} ${data.name} : ${JSON.stringify(entry)}`);
       let upd;
       if (removeFirst) {
         await pack.delete(entry._id);
@@ -2438,7 +2438,7 @@ export default class ImportHelpers {
     const pack = game.packs.get(searchName);
     if (!pack) {
       const compendiumLabel = name.split(".")[name.split(".").length - 1];
-      const createdCompendium = await foundry.documents.collections.CompendiumCollection.createCompendium({
+      const createdCompendium = await CompendiumCollection.createCompendium({
         label: compendiumLabel,
         name: name.replaceAll(".", "").toLowerCase(),
         type: type,
@@ -2478,7 +2478,6 @@ export default class ImportHelpers {
     const actorItemFolder = "Actor Items";
     const equipmentItemFolder = "Equipment";
     const vehicleItemFolder = "Vehicles";
-    const characterCreatorFolderName = "Character Creator";
 
     if (["Careers", "ForcePowers", "SignatureAbilities", "Specializations", "Species", "Talents"].includes(packName)) {
       // create the actor item folder
@@ -2540,20 +2539,6 @@ export default class ImportHelpers {
         equipmentFolder = modFolder;
       }
       return equipmentFolder;
-    } else if (["Backgrounds", "Obligations", "Motivations"].includes(packName)) {
-      // create or locate the top-level equipment folder
-      let characterCreatorFolder = game.folders.find((f) => f.name === characterCreatorFolderName);
-      if (!characterCreatorFolder) {
-        await Folder.create({
-          name: characterCreatorFolderName,
-          type: "Compendium",
-        });
-        characterCreatorFolder = game.folders.find((f) => f.name === characterCreatorFolderName);
-        await characterCreatorFolder.update({
-          folder: parentFolder.id,
-        });
-      }
-      return characterCreatorFolder;
     } else if (["VehicleWeapons", "VehicleAttachments", "VehicleMods", "Planetary", "Space"].includes(packName)) {
         // create the actor item folder
         let actorFolder = game.folders.find((f) => f.name === vehicleItemFolder);
@@ -2573,12 +2558,11 @@ export default class ImportHelpers {
   }
 
   static processCharacteristicMod(mod) {
-    const nk = new Date().getTime();
     const modtype = "Characteristic";
     const type = ImportHelpers.convertOGCharacteristic(mod.Key);
 
     return {
-      type: `attr${nk}`,
+      type,
       value: {
         mod: type,
         modtype,
@@ -3098,8 +3082,6 @@ export default class ImportHelpers {
               inherentEffect.changes[inherentEffectChangeIndex].value = parseInt(inherentEffect.changes[inherentEffectChangeIndex].value) + parseInt(item.system.attributes.Brawn.value);
             } else if (modPath === "system.stats.strain.max" && item.type === "species") {
               inherentEffect.changes[inherentEffectChangeIndex].value = parseInt(inherentEffect.changes[inherentEffectChangeIndex].value) + parseInt(item.system.attributes.Willpower.value);
-            } else if (modPath === "system.stats.encumbrance.max" && item.type === "species") {
-              inherentEffect.changes[inherentEffectChangeIndex].value = parseInt(inherentEffect.changes[inherentEffectChangeIndex].value) + 5;
             } else {
               inherentEffect.changes[inherentEffectChangeIndex].value = formData.system.attributes[k].value;
             }

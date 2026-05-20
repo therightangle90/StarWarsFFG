@@ -108,6 +108,10 @@ export const itemmodifier_resultmodifiers = {
  * Used for the "modifier type" selector for modifiers
  */
 export const allModifiersTypes = {
+  "Stat All": {
+    "value": "Stat All",
+    "label": "SWFFG.ModTypeStatAll",
+  },
   "Stat": {
     "value": "Stat",
     "label": "SWFFG.ModTypeStat",
@@ -209,6 +213,7 @@ export const allModifiersMap = {
   "Weapon Stat": foundry.utils.duplicate(weapon_stats),
   "Armor Stat": foundry.utils.duplicate(armor_stats),
   "Vehicle Stat": foundry.utils.duplicate(vehicle_stats),
+  "Stat All": Object.assign(foundry.utils.duplicate(character_stats), foundry.utils.duplicate(vehicle_stats), foundry.utils.duplicate(armor_stats), foundry.utils.duplicate(weapon_stats)),
   "Stat": character_stats,
   "Result Modifiers": foundry.utils.duplicate(itemmodifier_resultmodifiers),
   "Dice Modifiers": foundry.utils.duplicate(itemmodifier_dicemodifiers),
@@ -230,11 +235,3 @@ export const allModifiersMap = {
   "Skill Remove Setback": foundry.utils.duplicate(skills),
   "Skill Setback": foundry.utils.duplicate(skills),
 }
-
-// list of modifier types which use skills. see above for usages of it
-export const skillModifierTypes = [
-  "Career Skill", "Force Boost", "Skill Add Advantage", "Skill Add Dark",
-  "Skill Add Despair", "Skill Add Failure", "Skill Add Light", "Skill Add Success",
-  "Skill Add Threat", "Skill Add Triumph", "Skill Add Upgrade", "Skill Boost",
-  "Skill Rank", "Skill Remove Setback", "Skill Setback",
-];

@@ -1,18 +1,6 @@
 import ImportHelpers from "../../import-helpers.js";
 
 export default class Talents {
-  static getMetaData() {
-    return {
-      displayName: 'Talents',
-      className: "Talent",
-      itemName: "talent",
-      localizationName: "TYPES.Item.talent",
-      fileNames: ["/Talents.xml"],
-      filesAreDir: false,
-      phase: 3,
-    };
-  }
-
   static async Import(xml, zip) {
     try {
       const base = JXON.xmlToJs(xml);
@@ -22,7 +10,7 @@ export default class Talents {
         let currentCount = 0;
         let pack = await ImportHelpers.getCompendiumPack("Item", `oggdude.Talents`);
         CONFIG.logger.debug(`Starting Oggdude Talents Import`);
-        $(".import-progress.talent").toggleClass("import-hidden");
+        $(".import-progress.talents").toggleClass("import-hidden");
 
         await ImportHelpers.asyncForEach(items, async (item) => {
           try {
@@ -51,11 +39,6 @@ export default class Talents {
               default:
                 activation = "Passive";
                 activationLabel = "SWFFG.TalentActivationsPassive";
-            }
-
-            if (item.Description.split('\n').length > 0 && item.Description.includes('[H4]')) {
-              // remove the item name in the description....
-              item.Description = item.Description.replace('\n\n', '\n').split('\n').slice(1).join('<br>');
             }
 
             data.data = {
@@ -113,15 +96,13 @@ export default class Talents {
 
             currentCount += 1;
 
-            $(".talent .import-progress-bar")
+            $(".talents .import-progress-bar")
               .width(`${Math.trunc((currentCount / totalCount) * 100)}%`)
               .html(`<span>${Math.trunc((currentCount / totalCount) * 100)}%</span>`);
           } catch (err) {
             CONFIG.logger.error(`Error importing record : `, err);
           }
         });
-      } else {
-        CONFIG.logger.warn("Unable to find any talents!");
       }
     } catch (err) {
       CONFIG.logger.error(`Error importing record : `, err);

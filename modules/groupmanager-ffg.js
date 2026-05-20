@@ -1,8 +1,7 @@
 import {xpLogEarn} from "./helpers/actor-helpers.js";
 import ActorHelpers from "./helpers/actor-helpers.js";
 
-const CanvasLayerClass = foundry?.canvas?.layers?.CanvasLayer || CanvasLayer;
-export class GroupManagerLayer extends CanvasLayerClass {
+export class GroupManagerLayer extends CanvasLayer {
   constructor() {
     super();
   }
@@ -332,7 +331,7 @@ export class GroupManager extends FormApplication {
   async _grantXP(character) {
     const id = foundry.utils.randomID();
     const description = game.i18n.localize("SWFFG.GrantXPTo") + ` ${character.name}...`;
-    const content = await foundry.applications.handlebars.renderTemplate("systems/starwarsffg/templates/grant-xp.html", {
+    const content = await renderTemplate("systems/starwarsffg/templates/grant-xp.html", {
       id,
     });
 
@@ -368,7 +367,7 @@ export class GroupManager extends FormApplication {
   async _bulkXP(characters) {
     const id = foundry.utils.randomID();
     const description = game.i18n.localize("SWFFG.GrantXPToAllCharacters");
-    const content = await foundry.applications.handlebars.renderTemplate("systems/starwarsffg/templates/grant-xp.html", {
+    const content = await renderTemplate("systems/starwarsffg/templates/grant-xp.html", {
       id,
     });
 

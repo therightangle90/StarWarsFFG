@@ -34,15 +34,15 @@ export default class RollBuilderFFG extends FormApplication {
     //get all possible sounds
     let sounds = [];
     const diceSymbols = {
-      advantage: await foundry.applications.ux.TextEditor.enrichHTML("[AD]"),
-      success: await foundry.applications.ux.TextEditor.enrichHTML("[SU]"),
-      threat: await foundry.applications.ux.TextEditor.enrichHTML("[TH]"),
-      failure: await foundry.applications.ux.TextEditor.enrichHTML("[FA]"),
-      upgrade: await foundry.applications.ux.TextEditor.enrichHTML("[PR]"),
-      triumph: await foundry.applications.ux.TextEditor.enrichHTML("[TR]"),
-      despair: await foundry.applications.ux.TextEditor.enrichHTML("[DE]"),
-      light: await foundry.applications.ux.TextEditor.enrichHTML("[LI]"),
-      dark: await foundry.applications.ux.TextEditor.enrichHTML("[DA]"),
+      advantage: await TextEditor.enrichHTML("[AD]"),
+      success: await TextEditor.enrichHTML("[SU]"),
+      threat: await TextEditor.enrichHTML("[TH]"),
+      failure: await TextEditor.enrichHTML("[FA]"),
+      upgrade: await TextEditor.enrichHTML("[PR]"),
+      triumph: await TextEditor.enrichHTML("[TR]"),
+      despair: await TextEditor.enrichHTML("[DE]"),
+      light: await TextEditor.enrichHTML("[LI]"),
+      dark: await TextEditor.enrichHTML("[DA]"),
     };
 
     let canUserAddAudio = await game.settings.get("starwarsffg", "allowUsersAddRollAudio");
@@ -187,20 +187,6 @@ export default class RollBuilderFFG extends FormApplication {
         }
       } catch (error) {
         CONFIG.logger.warn(`Caught error in roller: ${error}`);
-      }
-
-      try {
-        if (this?.roll?.item && this.roll.item.type === "weapon") {
-          const item = await foundry.utils.fromUuid(this.roll.item.uuid);
-          if (item) {
-            const ammoEnabled = item.getFlag("starwarsffg", "config.enableAmmo");
-            if (ammoEnabled) {
-              await item.update({"system.ammo.value": item.system.ammo.value - 1});
-            }
-          }
-        }
-      } catch (error) {
-        CONFIG.logger.warn(`Caught ammo error in roller: ${error}`);
       }
 
       const sentToPlayer = html.find(".user-selection")?.[0]?.value;
@@ -357,8 +343,8 @@ export default class RollBuilderFFG extends FormApplication {
       if (input.value > 0 || allowNegative) {
         input.value--;
         this.dicePool[input.name] = parseInt(input.value);
+        this._updatePreview(html);
       }
-      this._updatePreview(html);
     });
   }
 
@@ -378,6 +364,7 @@ export default class RollBuilderFFG extends FormApplication {
           challengeDice: this.dicePool.challenge,
           boostDice: this.dicePool.boost,
           setbackDice: this.dicePool.setback,
+          // fixed results are not supported by the library
         },
         iterations: game.settings.get("starwarsffg", "rollSimulation"),
         runSimulate: false,

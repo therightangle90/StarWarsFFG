@@ -230,8 +230,6 @@ export default class ModifierHelpers {
    * @param  {object} event
    */
   static async onClickAttributeControl(event) {
-    if(this.actor && !this.actor.verifyEditModeIsNotEnabled()) return;
-
     event.preventDefault();
     const a = event.currentTarget;
     const action = a.dataset.action;
@@ -269,7 +267,7 @@ export default class ModifierHelpers {
           await this.object.update({
             "system.attributes": {
               [`attr${nk}`]: {
-                modtype: "Stat",
+                modtype: "Stat All",
                 mod: "Wounds",
                 value: 0,
               },
@@ -358,8 +356,7 @@ export default class ModifierHelpers {
     return dicePool;
   }
 
-  // Returns true if data item has characteristic that impacts its damage, false otherwise
-  static shouldApplyCharacteristicToDamage(data) {
+  static applyBrawnToDamage(data) {
     if(data.characteristic?.value !== "" && data.characteristic?.value !== undefined) {
       return true;
     }
@@ -415,22 +412,7 @@ export default class ModifierHelpers {
    * @returns {[{modType, mod}]|[{modType, mod: string},{modType, mod: string}]}
    */
   static explodeMod(modType, mod) {
-    const modLower = mod.toLocaleLowerCase();
-    if (["defence-melee", "defense-melee"].includes(modLower)) {
-      return [
-        {
-          modType: "Stat",
-          mod: "Defence.Melee",
-        },
-      ];
-    } else if (["defence-ranged", "defense-ranged"].includes(modLower)) {
-      return [
-        {
-          modType: "Stat",
-          mod: "Defence.Ranged",
-        },
-      ];
-    } else if (["defence", "defense"].includes(modLower)) {
+    if (mod.toLocaleLowerCase().includes("defense") || mod.toLocaleLowerCase().includes("defence")) {
       return [
         {
           modType: "Stat",
@@ -569,8 +551,6 @@ export default class ModifierHelpers {
       }
     } else if (["Weapon Stat", "Armor Stat"].includes(modType) && mod === "encumbrance") {
         return `system.stats.encumbrance.value`;
-    } else if (modType === "Armor Stat" && mod === "soak") {
-        return `system.stats.soak.value`;
     } else {
       // TODO: this probably shouldn't be a UI notification in the released version
       CONFIG.logger.debug(`Unknown mod type: ${modType}`);

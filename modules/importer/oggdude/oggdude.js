@@ -11,47 +11,21 @@ import Species from "./importers/species.js";
 import Talents from "./importers/talents.js";
 import Vehicles from "./importers/vehicles.js";
 import Weapons from "./importers/weapons.js";
-import Backgrounds from "./importers/backgrounds.js";
-import Obligation from "./importers/obligation.js";
-import Motivations from "./importers/motivations.js";
 
 export default class OggDude {
   static Import = {
     Armor: Armor.Import,
     Career: Career.Import,
-    ForcePower: ForcePowers.Import,
+    ForcePowers: ForcePowers.Import,
     Gear: Gear.Import,
     ItemAttachments: ItemAttachments.Import,
-    ItemModifiers: ItemDescriptors.Import,
-    SignatureAbility: SignatureAbilities.Import,
+    ItemDescriptors: ItemDescriptors.Import,
+    SignatureAbilities: SignatureAbilities.Import,
     Skills: Skills.Import,
-    Specialization: Specializations.Import,
+    Specializations: Specializations.Import,
     Species: Species.Import,
-    Talent: Talents.Import,
-    Vehicle: Vehicles.Import,
-    Weapon: Weapons.Import,
-    Backgrounds: Backgrounds.Import,
-    Obligations: Obligation.Import,
-    Motivations: Motivations.Import,
+    Talents: Talents.Import,
+    Vehicles: Vehicles.Import,
+    Weapons: Weapons.Import,
   };
-  static Meta = {
-    Armor: Armor.getMetaData(),
-    Backgrounds: Backgrounds.getMetaData(),
-    Career: Career.getMetaData(),
-    // TODO: figure out how this works - uses multiple files/dirs
-    // this._enableImportSelection(zip.files, "Force Abilities");
-    ForcePowers: ForcePowers.getMetaData(),
-    Gear: Gear.getMetaData(),
-    ItemAttachments: ItemAttachments.getMetaData(),
-    ItemModifiers: ItemDescriptors.getMetaData(),
-    Motivations: Motivations.getMetaData(),
-    Obligations: Obligation.getMetaData(),
-    SignatureAbilities: SignatureAbilities.getMetaData(),
-    Skills: Skills.getMetaData(),
-    Specializations: Specializations.getMetaData(),
-    Species: Species.getMetaData(),
-    Talents: Talents.getMetaData(),
-    Vehicles: Vehicles.getMetaData(),
-    Weapons: Weapons.getMetaData(),
-  }
 }

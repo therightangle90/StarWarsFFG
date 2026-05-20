@@ -38,7 +38,7 @@ class ffgSettings extends FormApplication {
   _onFilePicker(event) {
     event.preventDefault();
 
-    const fp = new foundry.applications.apps.FilePicker({
+    const fp = new FilePicker({
       type: "image",
       callback: (path) => {
         $(event.currentTarget).prev().val(path);
@@ -153,7 +153,6 @@ export class actorSettings extends ffgSettings {
       "starwarsffg.maxSkill",
       "starwarsffg.medItemName",
       "starwarsffg.HealingItemAction",
-      "starwarsffg.consumeHealingItem",
       "starwarsffg.RivalTokenPrepend",
     ];
     return super.getData(includeSettingsNames);
@@ -176,19 +175,7 @@ export class xpSpendingSettings extends ffgSettings {
       "starwarsffg.signatureAbilityCompendiums",
       "starwarsffg.forcePowerCompendiums",
       "starwarsffg.talentCompendiums",
-      "starwarsffg.backgroundCompendiums",
-      "starwarsffg.obligationCompendiums",
-      "starwarsffg.speciesCompendiums",
-      "starwarsffg.careerCompendiums",
-      "starwarsffg.motivationCompendiums",
-      "starwarsffg.itemCompendiums",
       "starwarsffg.notifyOnXpSpend",
-      "starwarsffg.defaultObligation",
-      "starwarsffg.defaultDuty",
-      "starwarsffg.defaultMorality",
-      "starwarsffg.maxRarity",
-      "starwarsffg.allowRestricted",
-      "starwarsffg.defaultCredits",
     ];
     return super.getData(includeSettingsNames);
   }

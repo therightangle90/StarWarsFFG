@@ -1,18 +1,6 @@
 import ImportHelpers from "../../import-helpers.js";
 
 export default class Vehicles {
-  static getMetaData() {
-    return {
-      displayName: 'Vehicles',
-      className: "Vehicle",
-      itemName: "vehicle",
-      localizationName: "SWFFG.ItemsVehicles",
-      fileNames: ["/Vehicles/"],
-      filesAreDir: true,
-      phase: 7,
-    };
-  }
-
   static async Import(zip) {
     try {
       const files = Object.values(zip.files).filter((file) => {
@@ -23,7 +11,7 @@ export default class Vehicles {
 
       if (files.length) {
         CONFIG.logger.debug(`Starting Oggdude Vehicles Import`);
-        $(".import-progress.vehicle").toggleClass("import-hidden");
+        $(".import-progress.vehicles").toggleClass("import-hidden");
 
         await ImportHelpers.asyncForEach(files, async (file) => {
           try {
@@ -178,7 +166,7 @@ export default class Vehicles {
 
             currentCount += 1;
 
-            $(".vehicle .import-progress-bar")
+            $(".vehicles .import-progress-bar")
               .width(`${Math.trunc((currentCount / totalCount) * 100)}%`)
               .html(`<span>${Math.trunc((currentCount / totalCount) * 100)}%</span>`);
           } catch (err) {

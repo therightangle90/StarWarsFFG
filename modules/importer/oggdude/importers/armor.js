@@ -1,18 +1,6 @@
 import ImportHelpers from "../../import-helpers.js";
 
 export default class Armor {
-  static getMetaData() {
-    return {
-      displayName: 'Armor',
-      className: "Armor",
-      itemName: "armor",
-      localizationName: "SWFFG.ItemsArmor",
-      fileNames: ["Armor.xml"],
-      filesAreDir: false,
-      phase: 3,
-    };
-  }
-
   static async Import(xml, zip) {
     try {
       const base = JXON.xmlToJs(xml);
@@ -28,17 +16,11 @@ export default class Armor {
           try {
             let data = ImportHelpers.prepareBaseObject(item, "armour");
 
-            if (item.Description.split('\n').length > 0 && item.Description.includes('[H4]')) {
-              // remove the item name in the description....
-              item.Description = item.Description.replace('\n\n', '\n').split('\n').slice(1).join('<br>');
-            }
-
             data.data = {
               attributes: {},
               description: item.Description,
               encumbrance: {
                 value: item.Encumbrance ? parseInt(item.Encumbrance, 10) : 0,
-                adjusted: item.Encumbrance ? parseInt(item.Encumbrance, 10) : 0,
               },
               price: {
                 value: item.Price ? parseInt(item.Price, 10) : 0,
@@ -98,8 +80,6 @@ export default class Armor {
             let imgPath = await ImportHelpers.getImageFilename(zip, "Equipment", "Armor", data.flags.starwarsffg.ffgimportid);
             if (imgPath) {
               data.img = await ImportHelpers.importImage(imgPath.name, zip, pack);
-            } else {
-              data.img = "systems/starwarsffg/images/defaults/items/armor.png";
             }
 
             await ImportHelpers.addImportItemToCompendium("Item", data, pack);

@@ -2,12 +2,6 @@
   "Actor": {
     "types": ["character", "minion", "vehicle", "homestead", "rival", "nemesis"],
     "templates": {
-      "meta_only": {
-        "metadata": {
-          "tags": [],
-          "sources": []
-        }
-      },
       "biography": {
         "biography": ""
       },
@@ -399,7 +393,7 @@
       }
     },
     "character": {
-      "templates": ["biography", "species", "career", "specialisation", "stats", "characteristics", "skills", "attributes", "general", "meta_only"],
+      "templates": ["biography", "species", "career", "specialisation", "stats", "characteristics", "skills", "attributes", "general"],
       "encumbrance": {
         "value": 0,
         "type": "Number",
@@ -433,7 +427,7 @@
       }
     },
     "minion": {
-      "templates": ["biography", "stats", "characteristics", "skills", "attributes", "meta_only"],
+      "templates": ["biography", "stats", "characteristics", "skills", "attributes"],
       "quantity": {
         "value": 1,
         "max": 1,
@@ -448,7 +442,7 @@
       }
     },
     "vehicle": {
-      "templates": ["biography", "attributes", "meta_only"],
+      "templates": ["biography", "attributes"],
       "stats": {
         "silhouette": {
           "value": 1,
@@ -547,7 +541,7 @@
       "silhouetteImage": "systems/starwarsffg/images/shipdefence.png"
     },
     "homestead": {
-      "templates": ["biography", "attributes", "meta_only"],
+      "templates": ["biography", "attributes"],
       "cost": {
         "value": 0,
         "type": "Number",
@@ -562,7 +556,7 @@
       }
     },
     "rival": {
-      "templates": ["biography", "species", "characteristics", "skills", "attributes", "general", "meta_only"],
+      "templates": ["biography", "species", "characteristics", "skills", "attributes", "general"],
       "stats": {
           "wounds": {
             "value": 0,
@@ -598,37 +592,13 @@
         }
     },
     "nemesis": {
-      "templates": ["biography", "species", "stats", "characteristics", "skills", "attributes", "general", "meta_only"]
+      "templates": ["biography", "species", "stats", "characteristics", "skills", "attributes", "general"]
     }
   },
   "Item": {
     "types": [
-      "ability",
-      "armour",
-      "career",
-      "criticaldamage", "criticalinjury",
-      "forcepower",
-      "gear",
-      "itemattachment", "itemmodifier",
-      "talent",
-      "shipattachment",
-      "shipweapon",
-      "homesteadupgrade",
-      "signatureability",
-      "specialization",
-      "species",
-      "weapon",
-      "background",
-      "obligation",
-      "motivation"
-    ],
+      "ability", "armour", "career", "criticaldamage", "criticalinjury", "forcepower", "gear", "itemattachment", "itemmodifier", "talent", "shipattachment", "shipweapon", "homesteadupgrade", "signatureability", "specialization", "species", "weapon"],
     "templates": {
-      "meta_only": {
-        "metadata": {
-          "tags": [],
-          "sources": []
-        }
-      },
       "core": {
         "description": "",
         "attributes": {},
@@ -691,9 +661,6 @@
     "gear": {
       "templates": ["core", "basic", "itemattachments", "qualities"]
     },
-    "homesteadupgrade": {
-      "templates": ["meta_only"]
-    },
     "weapon": {
       "templates": ["core", "basic", "hardpoints", "equippable", "itemattachments", "qualities"],
       "skill": {
@@ -725,10 +692,6 @@
         "value": "",
         "type": "String",
         "label": "Special"
-      },
-      "ammo": {
-        "max": 0,
-        "value": 0
       }
     },
     "armour": {
@@ -927,23 +890,6 @@
       "templates": ["core", "qualities"],
       "type": "all",
       "rank": 0
-    },
-    "background": {
-      "templates": ["core", "basic"],
-      "type": "culture",
-      "description": ""
-    },
-    "obligation": {
-      "templates": ["core", "basic"],
-      "type": "duty",
-      "magnitude": 0,
-      "subtype": "",
-      "description": ""
-    },
-    "motivation": {
-      "templates": ["core", "basic"],
-      "type": "ambition",
-      "description": ""
     }
   }
 }

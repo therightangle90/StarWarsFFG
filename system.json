@@ -2,16 +2,16 @@
   "id": "starwarsffg",
   "title": "Star Wars FFG",
   "description": "A system for playing Star Wars FFG games.",
-  "version": "2.0.3",
+  "version": "1.910",
   "compatibility": {
-    "minimum": 13,
-    "verified": 13,
-    "maximum": 13
+    "minimum": 12,
+    "verified": 12,
+    "maximum": 12
   },
   "authors": [{"name": "Esrin"}, {"name": "CStadther"}, {"name": "Wrycu"}, {"name": "Jaxxa"}],
-  "esmodules": ["modules/dice-pool-ffg.js", "modules/swffg-main.js", "lib/slimselect/slimselect.js", "lib/datatables/datatables.min.js"],
-  "styles": ["styles/starwarsffg.css", "lib/pure/grids-min.css", "lib/slimselect/slimselect.css", "lib/datatables/datatables.min.css"],
-  "scripts": ["lib/jszip/jszip.min.js", "lib/jxon/jxon.min.js", "lib/slimselect/slimselect.js"],
+  "esmodules": ["modules/dice-pool-ffg.js", "modules/swffg-main.js"],
+  "styles": ["styles/starwarsffg.css", "lib/select2/select2.min.css", "lib/pure/grids-min.css"],
+  "scripts": ["lib/select2/select2.min.js", "lib/jszip/jszip.min.js", "lib/jxon/jxon.min.js"],
   "socket": true,
   "packs": [],
   "packFolders": [],
@@ -45,11 +45,6 @@
       "lang": "ca",
       "name": "Català (Catalan)",
       "path": "lang/ca.json"
-    },
-    {
-      "lang": "ua",
-      "name": "Українська мова (Ukrainian)",
-      "path": "lang/ua.json"
     }
   ],
   "grid": {
@@ -60,6 +55,6 @@
   "secondaryTokenAttribute": "strain",
   "url": "https://github.com/StarWarsFoundryVTT/StarWarsFFG",
   "manifest": "https://github.com/StarWarsFoundryVTT/StarWarsFFG/releases/latest/download/system.json",
-  "download": "https://github.com/StarWarsFoundryVTT/StarWarsFFG/releases/download/v2.0.3/system.zip",
+  "download": "https://github.com/StarWarsFoundryVTT/StarWarsFFG/releases/download/v1.910/system.zip",
   "license": "LICENSE.txt"
 }

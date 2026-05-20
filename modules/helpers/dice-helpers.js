@@ -76,14 +76,6 @@ export default class DiceHelpers {
         item = obj.actor.token.actor.items.get(itemID);
       }
     }
-
-    if (item && item.type === "weapon") {
-      const ammoEnabled = item.getFlag("starwarsffg", "config.enableAmmo");
-      if (ammoEnabled && item.system.ammo.value <= 0) {
-        return ui.notifications.warn("Not enough ammo!");
-      }
-    }
-
     const itemData = item || {};
     const status = this.getWeaponStatus(itemData);
     let defenseDice = this.getDefenseDice(skill, itemData);
@@ -92,19 +84,19 @@ export default class DiceHelpers {
 
     let dicePool = new DicePoolFFG({
       ability: Math.max(characteristic.value, skill.rank),
-      boost: skill.boost ?? 0,
-      setback: (skill.setback ?? 0) + status.setback + defenseDice,
-      force: skill.force ?? 0,
-      advantage: skill.advantage ?? 0,
-      dark: skill.dark ?? 0,
-      light: skill.light ?? 0,
-      failure: skill.failure ?? 0,
-      threat: skill.threat ?? 0,
-      success: skill.success ?? 0,
-      triumph: skill.triumph ?? 0,
-      despair: skill.despair ?? 0,
-      upgrades: skill.upgrades ?? 0,
-      remsetback: skill.remsetback ?? 0,
+      boost: skill.boost,
+      setback: skill.setback + status.setback + defenseDice,
+      force: skill.force,
+      advantage: skill.advantage,
+      dark: skill.dark,
+      light: skill.light,
+      failure: skill.failure,
+      threat: skill.threat,
+      success: skill.success,
+      triumph: skill.triumph,
+      despair: skill.despair,
+      upgrades: skill.upgrades,
+      remsetback: skill?.remsetback ? skill.remsetback : 0,
       difficulty: 2 + status.difficulty, // default to average difficulty
     });
 
@@ -144,7 +136,8 @@ export default class DiceHelpers {
     return new RollBuilderFFG(data, dicePool, description, skillName, item, flavorText, sound).render(true);
   }
 
-  static async addSkillDicePool(data, elem) {
+  static async addSkillDicePool(obj, elem) {
+    const data = await obj.getData();
     const skillName = elem.dataset["ability"];
     if (data.data.skills[skillName]) {
       const skill = data.data.skills[skillName];
@@ -204,7 +197,7 @@ export default class DiceHelpers {
     let dicePool = new DicePoolFFG({
       ability: Math.max(characteristic.value, skill.rank),
       boost: skill.boost,
-      setback: (skill.setback ?? 0) + status.setback + defenseDice,
+      setback: skill.setback + status.setback + defenseDice,
       force: skill.force,
       advantage: skill.advantage,
       dark: skill.dark,
@@ -280,11 +273,9 @@ export default class DiceHelpers {
       if (item?.system?.itemattachment) {
         await ImportHelpers.asyncForEach(item.system.itemattachment, async (attachment) => {
           //get base mods and additional mods totals
-          dicePool = await ModifierHelpers.getDicePoolModifiers(dicePool, attachment, []);
           const activeModifiers = attachment.system.itemmodifier.filter((i) => i.system?.active);
-          await ImportHelpers.asyncForEach(activeModifiers, async (modifier) => {
-            dicePool = await ModifierHelpers.getDicePoolModifiers(dicePool, modifier, []);
-          });
+
+          dicePool = await ModifierHelpers.getDicePoolModifiers(dicePool, attachment, activeModifiers);
         });
       }
       if (item?.system?.itemmodifier) {
@@ -314,18 +305,18 @@ export function get_dice_pool(actor_id, skill_name, incoming_roll) {
   const dicePool = new DicePoolFFG({
     ability: Math.max(characteristic.value, skill.rank) + incoming_roll.ability - (Math.min(characteristic.value, skill.rank) + incoming_roll.proficiency),
     proficiency: Math.min(characteristic.value, skill.rank) + incoming_roll.proficiency,
-    boost: (skill.boost ?? 0) + incoming_roll.boost,
-    setback: (skill.setback ?? 0) + incoming_roll.setback,
-    force: (skill.force ?? 0) + incoming_roll.force,
-    advantage: (skill.advantage ?? 0) + incoming_roll.advantage,
-    dark: (skill.dark ?? 0) + incoming_roll.dark,
-    light: (skill.light ?? 0) + incoming_roll.light,
-    failure: (skill.failure ?? 0) + incoming_roll.failure,
-    threat: (skill.threat ?? 0) + incoming_roll.threat,
-    success: (skill.success ?? 0) + incoming_roll.success,
-    triumph: (skill.triumph ?? 0) + incoming_roll.triumph,
-    despair: (skill.despair ?? 0) + incoming_roll.despair,
-    upgrades: (skill.upgrades ?? 0) + incoming_roll.upgrades,
+    boost: skill.boost + incoming_roll.boost,
+    setback: skill.setback + incoming_roll.setback,
+    force: skill.force + incoming_roll.force,
+    advantage: skill.advantage + incoming_roll.advantage,
+    dark: skill.dark + incoming_roll.dark,
+    light: skill.light + incoming_roll.light,
+    failure: skill.failure + incoming_roll.failure,
+    threat: skill.threat + incoming_roll.threat,
+    success: skill.success + incoming_roll.success,
+    triumph: skill.triumph + incoming_roll.triumph,
+    despair: skill.despair + incoming_roll.despair,
+    upgrades: skill.upgrades + incoming_roll.upgrades,
     remsetback: skill?.remsetback ? skill.remsetback : 0 + incoming_roll.remsetback,
     difficulty: +incoming_roll.difficulty,
     challenge: +incoming_roll.challenge,

@@ -1,18 +1,6 @@
 import ImportHelpers from "../../import-helpers.js";
 
 export default class ItemAttachments {
-  static getMetaData() {
-    return {
-      displayName: 'Item Attachments',
-      className: "ItemAttachments",
-      itemName: "itemattachment",
-      localizationName: "SWFFG.Labels.ItemAttachments",
-      fileNames: ["ItemAttachments.xml"],
-      filesAreDir: false,
-      phase: 3,
-    };
-  }
-
   static async Import(xml) {
     const base = JXON.xmlToJs(xml);
     let items = base?.ItemAttachments?.ItemAttachment;
@@ -29,7 +17,7 @@ export default class ItemAttachments {
       };
       let pack;
       CONFIG.logger.debug(`Starting Oggdude Item Attachments Import`);
-      $(".import-progress.itemattachment").toggleClass("import-hidden");
+      $(".import-progress.itemattachments").toggleClass("import-hidden");
 
       await ImportHelpers.asyncForEach(items, async (item) => {
         try {
@@ -111,7 +99,7 @@ export default class ItemAttachments {
           await ImportHelpers.addImportItemToCompendium("Item", data, pack);
           currentCount += 1;
 
-          $(".itemattachment .import-progress-bar")
+          $(".itemattachments .import-progress-bar")
             .width(`${Math.trunc((currentCount / totalCount) * 100)}%`)
             .html(`<span>${Math.trunc((currentCount / totalCount) * 100)}%</span>`);
         } catch (err) {
