@@ -63,6 +63,24 @@ async function parseSkillList() {
   }
 }
 
+Hooks.on("getSceneControlButtons", (controls) => {
+  const tokenControls = controls.find((control) => control.name === "token");
+  if (!tokenControls) {
+    return;
+  }
+
+  tokenControls.tools.push({
+    name: "group-manager",
+    title: game.i18n.localize("SWFFG.GroupManager"),
+    icon: "fas fa-users",
+    button: true,
+    visible: game.user.isGM,
+    onClick: () => {
+      new GroupManager().render(true);
+    },
+  });
+});
+
 Hooks.on("setup", function (){
   // add dice symbol rendering to the text editor for journal pages
   register_roll_tag_enricher();
@@ -1297,40 +1315,7 @@ Hooks.once("ready", async () => {
   // Display Destiny Pool
   let destinyPool = { light: game.settings.get("starwarsffg", "dPoolLight"), dark: game.settings.get("starwarsffg", "dPoolDark") };
 
-  // future functionality to allow multiple menu items to be passed to destiny pool
-  const defaultDestinyMenu = [
-    {
-      name: game.i18n.localize("SWFFG.GroupManager"),
-      icon: '<i class="fas fa-users"></i>',
-      callback: () => {
-        new GroupManager().render(true);
-      },
-      minimumRole: CONST.USER_ROLES.GAMEMASTER,
-    },
-    {
-      name: game.i18n.localize("SWFFG.RequestDestinyRoll"),
-      icon: '<i class="fas fa-dice-d20"></i>',
-      callback: (li) => {
-        const messageText = `<button class="ffg-destiny-roll">${game.i18n.localize("SWFFG.DestinyPoolRoll")}</button>`;
-
-        new Map([...game.settings.settings].filter(([k, v]) => v.key.includes("destinyrollers"))).forEach((i) => {
-          game.settings.set(i.namespace, i.key, undefined);
-        });
-
-        game.settings.set("starwarsffg", "dPoolLight", 0);
-        game.settings.set("starwarsffg", "dPoolDark", 0);
-
-        CONFIG.FFG.DestinyGM = game.user.id;
-
-        ChatMessage.create({
-          user: game.user.id,
-          content: messageText,
-        });
-      },
-      minimumRole: CONST.USER_ROLES.GAMEMASTER,
-    },
-  ];
-  const dTracker = new DestinyTracker(undefined, { menu: defaultDestinyMenu });
+  const dTracker = new DestinyTracker();
 
   dTracker.render(true);
 

@@ -45,7 +45,7 @@ export default class DestinyTracker extends FormApplication {
 
     // filter menu based on role.
 
-    const menu = this.menu.filter((m) => game.user.hasRole(m.minimumRole) || !m.minimumRole);
+    const menu = (this.menu ?? []).filter((m) => game.user.hasRole(m.minimumRole) || !m.minimumRole);
 
     // Return data
     return {
@@ -70,7 +70,7 @@ export default class DestinyTracker extends FormApplication {
     const d = html.find("swffg-destiny-container")[0];
     new Draggable(this, html, d, this.options.resizable);
 
-    $("#destiny-tracker").css({ bottom: "0px", right: "305px" });
+    $("#destiny-tracker").css({ bottom: "0px", right: "0px" });
 
     // future functionality to allow multiple menu items to be passed in
 

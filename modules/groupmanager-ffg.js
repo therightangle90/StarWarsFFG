@@ -208,6 +208,11 @@ export class GroupManager extends FormApplication {
       this._rollDuty();
     });
 
+    html.find(".request-destiny-roll").click(async (ev) => {
+      ev.preventDefault();
+      await this._requestDestinyRoll();
+    });
+
     // Open character sheet on row click.
     html.find(".player-character").click((ev) => {
       if (!$(ev.target).hasClass("fas") && ev.target.localName !== "button") {
@@ -232,6 +237,30 @@ export class GroupManager extends FormApplication {
     game.settings.set("starwarsffg", "dPoolLight", formDPool.light);
     game.settings.set("starwarsffg", "dPoolDark", formDPool.dark);
     return formData;
+  }
+
+  async _requestDestinyRoll() {
+    const messageText = `<button class="ffg-destiny-roll">${game.i18n.localize("SWFFG.DestinyPoolRoll")}</button>`;
+
+    new Map([...game.settings.settings].filter(([k, v]) => v.key.includes("destinyrollers"))).forEach((i) => {
+      game.settings.set(i.namespace, i.key, undefined);
+    });
+
+    game.settings.set("starwarsffg", "dPoolLight", 0);
+    game.settings.set("starwarsffg", "dPoolDark", 0);
+    if (this.form?.elements?.["dPool.light"]) {
+      this.form.elements["dPool.light"].value = 0;
+    }
+    if (this.form?.elements?.["dPool.dark"]) {
+      this.form.elements["dPool.dark"].value = 0;
+    }
+
+    CONFIG.FFG.DestinyGM = game.user.id;
+
+    await ChatMessage.create({
+      user: game.user.id,
+      content: messageText,
+    });
   }
 
   _addCharacterObligationDuty(character, rangeStart, list, type) {

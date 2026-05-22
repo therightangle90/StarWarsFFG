@@ -58,9 +58,10 @@
                   {{/each_when}}
                 </td>
                 <td>
-                  {{localize "SWFFG.MoralityThreshold"}}:
+                  {{#if hasForceRating}}{{localize "SWFFG.MoralityThreshold"}}:{{/if}}
                 </td>
                 <td>
+                  {{#if hasForceRating}}
                   {{#each_when actor.items "type" "moralitythreshold"}}
                   <div class="moralitythreshold-pill item" data-item-id="{{item._id}}">
                     {{item.name}} <i class="fas fa-times item-delete"></i>
@@ -68,19 +69,18 @@
                   {{else}}
                   <div class="drag-note">{{localize "SWFFG.DragNotes"}}</div>
                   {{/each_when}}
+                  {{/if}}
                 </td>
               </tr>
+              {{#if hasForceRating}}
               <tr style="{{#if limited}}display:none;{{/if}}">
                 <td>
                   {{#if sheetConfig.hideCharacterPurchaseButtons}}{{else}}
-                  {{#if (or (eq actor.flags.starwarsffg.config.enableForcePool undefined) (eq actor.flags.starwarsffg.config.enableForcePool true) )}}
                   <i class="fa-regular fa-circle-up ffg-purchase" data-buy-action="forcepower" title="{{localize "SWFFG.Actors.Sheets.Purchase.Tooltip.ForcePower"}}"></i>
-                  {{/if}}
                   {{/if}}
                   {{localize "SWFFG.ForcePowers"}}:
                 </td>
                 <td>
-                  {{#if (or (eq actor.flags.starwarsffg.config.enableForcePool undefined) (eq actor.flags.starwarsffg.config.enableForcePool true) )}}
                   {{#each_when actor.items "type" "forcepower"}}
                   <div class="forcepower-pill item" data-item-id="{{item._id}}">
                     {{item.name}} <i class="fas fa-times item-delete"></i>
@@ -88,11 +88,11 @@
                   {{else}}
                   <div class="drag-note">{{localize "SWFFG.DragNotes"}}</div>
                   {{/each_when}}
-                  {{/if}}
                 </td>
                 <td></td>
                 <td></td>
               </tr>
+              {{/if}}
               {{else}}
               <tr style="{{#if limited}}display:none;{{/if}}">
                 <td>
@@ -106,13 +106,13 @@
                   {{/each_when}}
                 </td>
                 <td>
-                  {{#if (or (eq actor.flags.starwarsffg.config.enableForcePool undefined) (eq actor.flags.starwarsffg.config.enableForcePool true) )}}
+                  {{#if hasForceRating}}
                   <i class="fa-regular fa-circle-up ffg-purchase" data-buy-action="forcepower" title="{{localize "SWFFG.Actors.Sheets.Purchase.Tooltip.ForcePower"}}"></i>
                   {{localize "SWFFG.ForcePowers"}}:
                   {{/if}}
                 </td>
                 <td>
-                  {{#if (or (eq actor.flags.starwarsffg.config.enableForcePool undefined) (eq actor.flags.starwarsffg.config.enableForcePool true) )}}
+                  {{#if hasForceRating}}
                   {{#each_when actor.items "type" "forcepower"}}
                   <div class="forcepower-pill item" data-item-id="{{item._id}}">
                     {{item.name}} <i class="fas fa-times item-delete"></i>
@@ -248,7 +248,7 @@
       </div>
       {{> "systems/starwarsffg/templates/parts/actor/ffg-talents.html"}}
       {{!-- Abilities List --}} {{> "systems/starwarsffg/templates/parts/actor/ffg-abilities.html"}}
-      {{!-- Force Powers List --}} {{> "systems/starwarsffg/templates/parts/actor/ffg-forcepowers.html"}}
+      {{!-- Force Powers List --}} {{#if hasForceRating}}{{> "systems/starwarsffg/templates/parts/actor/ffg-forcepowers.html"}}{{/if}}
       {{> "systems/starwarsffg/templates/parts/actor/ffg-signatureability.html"}}
     </div>
 

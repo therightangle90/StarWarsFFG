@@ -21,6 +21,11 @@
       </div>
       <label>{{localize labels.dark}}:<img src="systems/starwarsffg/images/dice/{{this.theme}}/darkside.png" alt="{{localize labels.dark}}:" /><input type="text" name="dPool.dark" value="{{dPool.dark}}" data-dtype="Number" placeholder="0" /></label>
     </div>
+    {{#if isGM}}
+    <div style="margin-top: 0.5rem;">
+      <button type="button" class="request-destiny-roll">{{localize "SWFFG.RequestDestinyRoll"}}</button>
+    </div>
+    {{/if}}
   </div>
 
   <div class="PC-list">

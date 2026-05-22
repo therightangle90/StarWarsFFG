@@ -196,11 +196,15 @@ export class ActorSheetFFG extends ActorSheet {
   async getData(options) {
     const data = await super.getData();
     data.classType = this.constructor.name;
+    const preparedSystem = foundry.utils.deepClone(this.actor.system);
 
     // Compatibility for Foundry 0.8.x with backwards compatibility (hopefully) for 0.7.x
     const actorData = this.actor.toObject(false);
     data.actor = actorData;
     data.data = actorData.system;
+    data.data.characteristics = preparedSystem.characteristics;
+    data.data.stats.forcePool = preparedSystem.stats.forcePool;
+    data.hasForceRating = Number(preparedSystem.stats?.forcePool?.max ?? 0) >= 1;
     data.talentList = this.actor.talentList;
     data.rollData = this.actor.getRollData.bind(this.actor);
 
