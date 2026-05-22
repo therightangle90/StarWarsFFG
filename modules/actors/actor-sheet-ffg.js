@@ -319,10 +319,6 @@ export class ActorSheetFFG extends ActorSheet {
       data.xpLog = this.object.getFlag("starwarsffg", "xpLog") || [];
     }
 
-    if (this.actor.type === "character" && typeof data.data.stats.level === "undefined") {
-      data.data.stats.level = { value: 1 };
-    }
-
     data.actor.items = ActorSheetFFG.sortForActorSheet(data.actor.items);
     data.disabled = !enableEditMode;
 

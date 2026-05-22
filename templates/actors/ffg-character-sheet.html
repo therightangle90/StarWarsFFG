@@ -118,7 +118,7 @@
                 <div class="block-title">Level</div>
                 <div class="block-attribute">
                   <div class="block-value block-single">
-                    <input type="text" value="{{data.stats.level.value}}" data-dtype="Number" class="v3-adjustable-field" data-adjust-path="system.stats.level.value" data-adjust-min="1" data-adjust-default="1" readonly tabindex="-1" />
+                    <input type="text" value="{{#if data.stats.level}}{{data.stats.level.value}}{{else}}1{{/if}}" data-dtype="Number" class="v3-adjustable-field" data-adjust-path="system.stats.level.value" data-adjust-min="1" data-adjust-default="1" readonly tabindex="-1" />
                   </div>
                 </div>
               </div>
