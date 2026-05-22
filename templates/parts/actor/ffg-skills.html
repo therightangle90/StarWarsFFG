@@ -39,7 +39,7 @@
           {{/if}}
           <div class="pure-u-3-24">
             {{#if (contains ../../classType "V3")}}
-            <input class="careerskill-rank v3-adjustable-field" value="{{skill.rank}}" type="text" min="0" data-dtype="Number" placeholder="0" data-adjust-path="system.skills.{{skill.name}}.rank" data-adjust-min="0" data-adjust-max="{{skill.max}}" data-adjust-default="0" readonly />
+            <input class="careerskill-rank v3-adjustable-field" value="{{skill.rank}}" type="text" min="0" data-dtype="Number" placeholder="0" data-adjust-path="system.skills.{{skill.name}}.rank" data-adjust-min="0" data-adjust-max="{{skill.max}}" data-adjust-default="0" title="{{localize "SWFFG.V3AdjustableFieldHint"}}" readonly />
             {{else}}
             <input class="careerskill-rank" name="data.skills.{{skill.name}}.rank" value="{{skill.rank}}" type="text" min="0" data-dtype="Number" placeholder="0" {{#if ../../disabled }}disabled{{/if }} />
             {{/if}}

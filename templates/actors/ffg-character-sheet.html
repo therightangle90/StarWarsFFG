@@ -58,7 +58,7 @@
                   {{/each_when}}
                 </td>
                 <td>
-                  {{localize "SWFFG.DescriptionMorality"}}:
+                  {{localize "SWFFG.MoralityThreshold"}}:
                 </td>
                 <td>
                   {{#each_when actor.items "type" "moralitythreshold"}}
@@ -173,7 +173,7 @@
                 <div class="block-title">{{localize "SWFFG.Level"}}</div>
                 <div class="block-attribute">
                   <div class="block-value block-single">
-                    <input type="text" value="{{#if data.stats.level.value}}{{data.stats.level.value}}{{else}}1{{/if}}" data-dtype="Number" class="v3-adjustable-field" data-adjust-path="system.stats.level.value" data-adjust-min="1" data-adjust-default="1" readonly />
+                    <input type="text" value="{{#if data.stats.level.value}}{{data.stats.level.value}}{{else}}1{{/if}}" data-dtype="Number" class="v3-adjustable-field" data-adjust-path="system.stats.level.value" data-adjust-min="1" data-adjust-default="1" title="{{localize "SWFFG.V3AdjustableFieldHint"}}" readonly />
                   </div>
                 </div>
               </div>
@@ -217,7 +217,7 @@
           <div class="characteristic">
             <div class="characteristic-value">
               {{#if (contains ../classType "V3")}}
-              <input type="text" value="{{characteristic.value}}" data-dtype="Number" pattern="[0-{{ ../maxAttribute }}]" class="v3-adjustable-field" data-adjust-path="system.characteristics.{{id}}.value" data-adjust-min="0" data-adjust-max="{{../maxAttribute}}" data-adjust-default="0" readonly />
+              <input type="text" value="{{characteristic.value}}" data-dtype="Number" pattern="[0-{{ ../maxAttribute }}]" class="v3-adjustable-field" data-adjust-path="system.characteristics.{{id}}.value" data-adjust-min="0" data-adjust-max="{{../maxAttribute}}" data-adjust-default="0" title="{{localize "SWFFG.V3AdjustableFieldHint"}}" readonly />
               {{else}}
               <input type="text" name="data.characteristics.{{id}}.value" value="{{characteristic.value}}" data-dtype="Number" pattern="[0-{{ ../maxAttribute }}]" {{#if ../disabled }}disabled{{/if }}/>
               {{/if}}
