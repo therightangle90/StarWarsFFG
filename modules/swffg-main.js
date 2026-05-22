@@ -96,6 +96,7 @@ Hooks.once("init", async function () {
   // to instead use our extended version.
   CONFIG.Actor.documentClass = ActorFFG;
   CONFIG.Item.documentClass = ItemFFG;
+  CONFIG.Item.typeLabels.moralitythreshold = "TYPES.Item.moralitythreshold";
   CONFIG.Combat.documentClass = CombatFFG;
   CONFIG.Combatant.documentClass = CombatantFFG;
 
