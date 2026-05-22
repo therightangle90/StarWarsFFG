@@ -800,14 +800,15 @@ img {
   width: auto;
 }
 .starwarsffg.sheet.actor.v3 .character .v3-primary-stats .v3-half-stat {
-  flex: 0.5 1 0;
+  flex: 0 0 50px;
+  width: 50px;
   min-width: 0;
 }
 .starwarsffg.sheet.actor.v3 .character .v3-primary-stats .v3-half-stat .resource {
-  width: auto;
+  width: 50px;
 }
-.starwarsffg.sheet.actor.v3 .character .v3-level-stat .block-title {
-  background-color: #CB5C2E;
+.starwarsffg.sheet.actor.v3 .character .v3-level-stat .block-title.v3-level-title {
+  background-color: #CB5C2E !important;
 }
 .starwarsffg .tabs {
   flex: 0 0 40px;

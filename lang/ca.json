@@ -554,6 +554,7 @@
     "TYPES.Item.homesteadupgrade": "Millora de Masia",
     "TYPES.Item.itemattachment": "Millora d'equipament",
     "TYPES.Item.itemmodifier": "Modificador d'equipament",
+    "TYPES.Item.moralitythreshold": "Llindar de Moralitat",
     "TYPES.Item.talent": "Talent",
     "TYPES.Item.shipattachment": "Kit de nau",
     "TYPES.Item.shipweapon": "Arma de nau",
