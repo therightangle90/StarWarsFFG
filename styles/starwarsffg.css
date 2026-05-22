@@ -795,15 +795,27 @@ img {
   flex-wrap: nowrap;
   gap: 4px;
 }
-.starwarsffg.sheet.actor.v3 .character .v3-primary-stats > * {
+.starwarsffg.sheet.actor.v3 .character .v3-primary-stats > .resource {
   flex: 1 1 0;
-  min-width: 0;
+  width: auto;
 }
-.starwarsffg.sheet.actor.v3 .character .v3-primary-stats > .resource,
-.starwarsffg.sheet.actor.v3 .character .v3-primary-stats > * .resource {
-  width: 100%;
-  min-width: 0;
-  max-width: none;
+.starwarsffg.sheet.actor.v3 .character .v3-primary-stats .v3-half-stat {
+  flex: 0 0 50px;
+  width: 50px;
+  min-width: 50px;
+  max-width: 50px;
+}
+.starwarsffg.sheet.actor.v3 .character .v3-primary-stats .v3-half-stat .resource {
+  width: 50px;
+  min-width: 50px;
+  max-width: 50px;
+}
+.starwarsffg.sheet.actor.v3 .character .v3-level-stat,
+.starwarsffg.sheet.actor.v3 .character .v3-soak-stat {
+  flex: 0 0 50px;
+  width: 50px;
+  min-width: 50px;
+  max-width: 50px;
 }
 .starwarsffg.sheet.actor.v3 .character .v3-level-stat .block-title,
 .starwarsffg.sheet.actor.v3 .character .v3-level-stat .block-title.v3-level-title {
