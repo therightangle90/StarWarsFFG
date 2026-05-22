@@ -18,6 +18,7 @@ import { ItemSheetFFG } from "./items/item-sheet-ffg.js";
 import { ItemSheetFFGV2 } from "./items/item-sheet-ffg-v2.js";
 import { ActorSheetFFG } from "./actors/actor-sheet-ffg.js";
 import { ActorSheetFFGV2 } from "./actors/actor-sheet-ffg-v2.js";
+import { ActorSheetFFGV3 } from "./actors/actor-sheet-ffg-v3.js";
 import { AdversarySheetFFG } from "./actors/adversary-sheet-ffg.js";
 import { AdversarySheetFFGV2 } from "./actors/adversary-sheet-ffg-v2.js";
 import { DicePoolFFG, RollFFG } from "./dice-pool-ffg.js";
@@ -699,7 +700,8 @@ Hooks.once("init", async function () {
 
   // Register sheet application classes
   Actors.unregisterSheet("core", ActorSheet);
-  Actors.registerSheet("ffg", ActorSheetFFGV2, { makeDefault: true, label: "Actor Sheet v2" });
+  Actors.registerSheet("ffg", ActorSheetFFGV2, { label: "Actor Sheet v2" });
+  Actors.registerSheet("ffg", ActorSheetFFGV3, { types: ["character"], makeDefault: true, label: "Actor Sheet v3" });
   Actors.registerSheet("ffg", AdversarySheetFFGV2, { types: ["character"], label: "Adversary Sheet v2" });
   Items.unregisterSheet("core", ItemSheet);
   Items.registerSheet("ffg", ItemSheetFFGV2, { makeDefault: true, label: "Item Sheet v2" });
@@ -1313,6 +1315,9 @@ Hooks.once("ready", async () => {
         new Map([...game.settings.settings].filter(([k, v]) => v.key.includes("destinyrollers"))).forEach((i) => {
           game.settings.set(i.namespace, i.key, undefined);
         });
+
+        game.settings.set("starwarsffg", "dPoolLight", 0);
+        game.settings.set("starwarsffg", "dPoolDark", 0);
 
         CONFIG.FFG.DestinyGM = game.user.id;
 

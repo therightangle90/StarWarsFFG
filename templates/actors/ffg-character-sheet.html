@@ -89,7 +89,7 @@
                 <td></td>
                 <td></td>
               </tr>
-              {{#if (contains classType "V2")}}{{else}}
+              {{#if (or (contains classType "V2") (contains classType "V3"))}}{{else}}
               <tr style="{{#if limited}}display:none;{{/if}}">
                 <td>
                   <div>
@@ -111,6 +111,20 @@
       {{!-- Primary Stats Container --}}
       <div class="container" style="flex-wrap: nowrap;{{#if limited}}display:none;{{/if}}">
         <div class="container flex-group-center">
+          {{#if (contains classType "V3")}}
+          <div class="resource single">
+            <div class="attribute flex-group-center">
+              <div class="block-background">
+                <div class="block-title">Level</div>
+                <div class="block-attribute">
+                  <div class="block-value block-single">
+                    <input type="text" name="data.stats.level.value" value="{{data.stats.level.value}}" data-dtype="Number" class="v3-adjustable-field" data-adjust-path="system.stats.level.value" data-adjust-min="1" data-adjust-default="1" readonly />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          {{/if}}
           {{!-- Wounds Box --}}
           {{> "systems/starwarsffg/templates/parts/shared/ffg-block.html" (object blocktype="split" title="SWFFG.Wounds" fields=(array (object name="data.stats.wounds.max" value=data.stats.wounds.max type="Number" label="SWFFG.Threshold" disabled=disabled) (object name="data.stats.wounds.value" value=data.stats.wounds.value type="Number" label="SWFFG.Current") ))}}
 
@@ -129,7 +143,7 @@
     </div>
   </header>
 
-  {{!-- Sheet Tab Navigation --}} {{> "systems/starwarsffg/templates/parts/shared/ffg-tabs.html" displayLimited=true limited=limited items=(array (object tab="characteristics" label="SWFFG.TabCharacteristics" icon="fas fa-user-circle" cls=classType) (object tab="items" label="SWFFG.TabGear" icon="fas fa-toolbox" cls=classType) (object tab="talents" label="SWFFG.TabTalents" icon="fab fa-superpowers" cls=classType) (object tab="crits" label="SWFFG.TabCrits" icon="fa-solid fa-notes-medical" cls=classType) (object tab="general" label="SWFFG.TabGeneral" icon="fas fa-address-card" cls=classType isHidden=true) (object tab="description" label="SWFFG.TabBiography" icon="fas fa-sticky-note" cls=classType) (object tab="obligation" label="SWFFG.TabObligationDutyMorality" icon="fas fa-balance-scale" cls=classType isHidden=true isHiddenV2=hideObligationDutyMoralityConflictTab) (object tab="xp" label="SWFFG.TabXpLog" icon="far fa-note" cls=classType isHidden=true) )}} {{!-- Sheet Body --}}
+  {{!-- Sheet Tab Navigation --}} {{> "systems/starwarsffg/templates/parts/shared/ffg-tabs.html" displayLimited=true limited=limited items=(array (object tab="characteristics" label="SWFFG.TabCharacteristics" icon="fas fa-user-circle" cls=classType) (object tab="items" label="SWFFG.TabGear" icon="fas fa-toolbox" cls=classType) (object tab="talents" label="SWFFG.TabTalents" icon="fab fa-superpowers" cls=classType) (object tab="crits" label="SWFFG.TabCrits" icon="fa-solid fa-notes-medical" cls=classType) (object tab="general" label="SWFFG.TabGeneral" icon="fas fa-address-card" cls=classType isHidden=true) (object tab="description" label="SWFFG.TabBiography" icon="fas fa-sticky-note" cls=classType) (object tab="obligation" label="SWFFG.TabObligationDutyMorality" icon="fas fa-balance-scale" cls=classType isHidden=true isHiddenV2=hideObligationDutyMoralityConflictTab isHiddenV3=hideObligationDutyMoralityConflictTab) (object tab="xp" label="SWFFG.TabXpLog" icon="far fa-note" cls=classType isHidden=true isHiddenV3=true) )}} {{!-- Sheet Body --}}
   <section class="sheet-body" style="{{#if limited}}display:none;{{/if}}">
     {{!-- Characteristics Tab --}}
     <div class="tab characteristics active" data-group="primary" data-tab="characteristics">
@@ -140,7 +154,11 @@
         <div class="characteristic-item flex-group-center" data-ability="{{id}}">
           <div class="characteristic">
             <div class="characteristic-value">
+              {{#if (contains ../classType "V3")}}
+              <input type="text" name="data.characteristics.{{id}}.value" value="{{characteristic.value}}" data-dtype="Number" pattern="[0-{{ ../maxAttribute }}]" class="v3-adjustable-field" data-adjust-path="system.characteristics.{{id}}.value" data-adjust-min="0" data-adjust-max="{{../maxAttribute}}" data-adjust-default="0" readonly />
+              {{else}}
               <input type="text" name="data.characteristics.{{id}}.value" value="{{characteristic.value}}" data-dtype="Number" pattern="[0-{{ ../maxAttribute }}]" {{#if ../disabled }}disabled{{/if }}/>
+              {{/if}}
             </div>
           </div>
           <div class="characteristic-label ffg-purchase" data-buy-action="characteristic" data-buy-characteristic="{{ id }}">
@@ -187,7 +205,7 @@
       </div>
 
       <div class="container flex-group-center biography-values">
-        {{#if (contains classType "V2")}}{{else}}
+        {{#if (or (contains classType "V2") (contains classType "V3"))}}{{else}}
           {{> "systems/starwarsffg/templates/parts/actor/ffg-criticalinjury.html" type="criticalinjury"}}
         {{/if}}
         {{!-- Experience Box --}}
@@ -272,22 +290,22 @@
     <div class="tab obligation" data-group="primary" data-tab="obligation">
       {{!-- Obligation Tab --}}
       {{!-- Obligation Box --}}
-        {{#if (or (eq actor.flags.starwarsffg.config.enableObligation undefined) (eq actor.flags.starwarsffg.config.enableObligation true) )}}
+        {{#if sheetConfig.enableObligation}}
           {{> "systems/starwarsffg/templates/parts/shared/ffg-block.html" (object blocktype="single" title="SWFFG.DescriptionObligation" headerlink=true headerclass="alt-tab" headerattributes="data-tab='obligation'" type="Number" name="data.obligation.value" value=data.obligation.value )}}
         {{/if}}
       {{!-- Duty Box --}}
-        {{#if (or (eq actor.flags.starwarsffg.config.enableDuty undefined) (eq actor.flags.starwarsffg.config.enableDuty true) )}}
+        {{#if sheetConfig.enableDuty}}
           {{> "systems/starwarsffg/templates/parts/shared/ffg-block.html" (object blocktype="single" title="SWFFG.DescriptionDuty" type="Number" name="data.duty.value" value=data.duty.value headerlink=true headerclass="alt-tab" headerattributes="data-tab='obligation'")}}
         {{/if}}
       {{!-- Morality Box --}}
-        {{#if (or (eq actor.flags.starwarsffg.config.enableMorality undefined) (eq actor.flags.starwarsffg.config.enableMorality true) )}}
+        {{#if sheetConfig.enableMorality}}
           {{> "systems/starwarsffg/templates/parts/shared/ffg-block.html" (object blocktype="single" title="SWFFG.DescriptionMorality" type="Number" name="data.morality.value" value=data.morality.value headerlink=true headerclass="alt-tab" headerattributes="data-tab='obligation'" )}}
         {{/if}}
       {{!-- Conflict Box --}}
-        {{#if (or (eq actor.flags.starwarsffg.config.enableConflict undefined) (eq actor.flags.starwarsffg.config.enableConflict true) )}}
+        {{#if sheetConfig.enableConflict}}
           {{> "systems/starwarsffg/templates/parts/shared/ffg-block.html" (object blocktype="single" title="SWFFG.DescriptionConflict" type="Number" name="data.conflict.value" value=data.conflict.value headerlink=true headerclass="alt-tab" headerattributes="data-tab='obligation'" )}}
         {{/if}}
-      {{#if (or (eq actor.flags.starwarsffg.config.enableObligation undefined) (eq actor.flags.starwarsffg.config.enableObligation true) )}}
+      {{#if sheetConfig.enableObligation}}
       <div class="resource full">
         <div class="attribute flex-group-center">
           <div class="block-background">
@@ -323,7 +341,7 @@
         </div>
       </div>
       {{/if}}
-      {{#if (or (eq actor.flags.starwarsffg.config.enableDuty undefined) (eq actor.flags.starwarsffg.config.enableDuty true) )}}
+      {{#if sheetConfig.enableDuty}}
       <div class="resource full">
         <div class="attribute flex-group-center">
           <div class="block-background">
@@ -358,7 +376,7 @@
           </div>
         </div>
       </div>
-      {{/if}} {{#if (or (eq actor.flags.starwarsffg.config.enableMorality undefined) (eq actor.flags.starwarsffg.config.enableMorality true) )}}
+      {{/if}} {{#if sheetConfig.enableMorality}}
       <div class="block-editor">
         {{> "systems/starwarsffg/templates/parts/shared/ffg-block.html" (object blocktype="full" title="SWFFG.EmotionalStrength" type="PopoutEditor" name="data.morality.strength" value=data.morality.strength)}}
       </div>

@@ -42,6 +42,9 @@
             "value": 0,
             "adjusted": 0
           },
+          "level": {
+            "value": 1
+          },
           "defence": {
             "ranged": 0,
             "melee": 0,

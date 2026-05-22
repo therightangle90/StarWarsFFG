@@ -32,7 +32,6 @@ export class ActorSheetFFG extends ActorSheet {
     this._filters = {
       skills: new Set(),
     };
-    this.object.setFlag("starwarsffg", "config.enableEditMode", false);
   }
 
   pools = new Map();
@@ -47,6 +46,22 @@ export class ActorSheetFFG extends ActorSheet {
       tabs: [{ navSelector: ".sheet-tabs", contentSelector: ".sheet-body", initial: "characteristics" }],
       scrollY: [".tableWithHeader", ".tab", ".skillsGrid", ".skillsTablesGrid"],
     });
+  }
+
+  getSheetOptionDefault(optionName, fallback) {
+    return fallback;
+  }
+
+  getSheetOptionValue(optionName, fallback) {
+    const configuredValue = this.object.getFlag("starwarsffg", `config.${optionName}`);
+    if (typeof configuredValue !== "undefined") {
+      return configuredValue;
+    }
+    return this.getSheetOptionDefault(optionName, fallback);
+  }
+
+  useEditModeSheetOption() {
+    return true;
   }
 
   /** @override */
@@ -202,17 +217,23 @@ export class ActorSheetFFG extends ActorSheet {
     }
     data.FFG = CONFIG.FFG;
 
-    let autoSoakCalculation = true;
-
-    if (typeof this.actor.flags?.starwarsffg?.config?.enableAutoSoakCalculation === "undefined") {
-      autoSoakCalculation = game.settings.get("starwarsffg", "enableSoakCalc");
-    } else {
-      autoSoakCalculation = this.actor.flags?.starwarsffg?.config?.enableAutoSoakCalculation;
-    }
+    const autoSoakCalculation = this.getSheetOptionValue("enableAutoSoakCalculation", game.settings.get("starwarsffg", "enableSoakCalc"));
+    const enableObligation = this.getSheetOptionValue("enableObligation", true);
+    const enableDuty = this.getSheetOptionValue("enableDuty", true);
+    const enableMorality = this.getSheetOptionValue("enableMorality", true);
+    const enableConflict = this.getSheetOptionValue("enableConflict", true);
+    const enableEditMode = this.getSheetOptionValue("enableEditMode", false);
 
     data.settings = {
       enableSoakCalculation: autoSoakCalculation,
-      enableCriticalInjuries: this.actor.flags?.starwarsffg?.config?.enableCriticalInjuries,
+      enableCriticalInjuries: this.getSheetOptionValue("enableCriticalInjuries", false),
+    };
+    data.sheetConfig = {
+      enableObligation,
+      enableDuty,
+      enableMorality,
+      enableConflict,
+      enableEditMode,
     };
 
     // Establish sheet width and height using either saved persistent values or default values defined in swffg-config.js
@@ -291,15 +312,19 @@ export class ActorSheetFFG extends ActorSheet {
       data.data.skilllist = this._createSkillColumns(data);
     }
 
-    if (this.actor.flags?.config?.enableObligation === false && this.actor.flags?.config?.enableDuty === false && this.actor.flags?.config?.enableMorality === false && this.actor.flags?.config?.enableConflict === false) {
+    if (enableObligation === false && enableDuty === false && enableMorality === false && enableConflict === false) {
       data.hideObligationDutyMoralityConflictTab = true;
     }
     if (this.actor.flags?.starwarsffg?.xpLog) {
       data.xpLog = this.object.getFlag("starwarsffg", "xpLog") || [];
     }
 
+    if (this.actor.type === "character" && typeof data.data.stats.level === "undefined") {
+      data.data.stats.level = { value: 1 };
+    }
+
     data.actor.items = ActorSheetFFG.sortForActorSheet(data.actor.items);
-    data.disabled = !this.object.getFlag("starwarsffg", "config.enableEditMode");
+    data.disabled = !enableEditMode;
 
     data.modTypeSelected = "all"; // TODO: should this be something else?
     data.modifierTypes = CONFIG.FFG.allowableModifierTypes;
@@ -565,13 +590,13 @@ export class ActorSheetFFG extends ActorSheet {
         name: game.i18n.localize("SWFFG.EnableObligation"),
         hint: game.i18n.localize("SWFFG.EnableObligationHint"),
         type: "Boolean",
-        default: true,
+        default: this.getSheetOptionDefault("enableObligation", true),
       });
       this.sheetoptions.register("enableDuty", {
         name: game.i18n.localize("SWFFG.EnableDuty"),
         hint: game.i18n.localize("SWFFG.EnableDutyHint"),
         type: "Boolean",
-        default: true,
+        default: this.getSheetOptionDefault("enableDuty", true),
       });
       this.sheetoptions.register("enableMorality", {
         name: game.i18n.localize("SWFFG.EnableMorality"),
@@ -645,12 +670,14 @@ export class ActorSheetFFG extends ActorSheet {
       });
     }
 
-    this.sheetoptions.register("enableEditMode", {
-      name: game.i18n.localize("SWFFG.EnableEditMode"),
-      hint: game.i18n.localize("SWFFG.EnableEditModeHint"),
-      type: "Boolean",
-      default: false,
-    });
+    if (this.useEditModeSheetOption()) {
+      this.sheetoptions.register("enableEditMode", {
+        name: game.i18n.localize("SWFFG.EnableEditMode"),
+        hint: game.i18n.localize("SWFFG.EnableEditModeHint"),
+        type: "Boolean",
+        default: this.getSheetOptionDefault("enableEditMode", false),
+      });
+    }
 
     html.find(".medical").click(async (ev) => {
       const item = await $(ev.currentTarget);
