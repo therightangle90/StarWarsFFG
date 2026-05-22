@@ -118,7 +118,7 @@
                 <div class="block-title">Level</div>
                 <div class="block-attribute">
                   <div class="block-value block-single">
-                    <input type="text" name="data.stats.level.value" value="{{data.stats.level.value}}" data-dtype="Number" class="v3-adjustable-field" data-adjust-path="system.stats.level.value" data-adjust-min="1" data-adjust-default="1" readonly />
+                    <input type="text" value="{{data.stats.level.value}}" data-dtype="Number" class="v3-adjustable-field" data-adjust-path="system.stats.level.value" data-adjust-min="1" data-adjust-default="1" readonly tabindex="-1" />
                   </div>
                 </div>
               </div>
@@ -155,7 +155,7 @@
           <div class="characteristic">
             <div class="characteristic-value">
               {{#if (contains ../classType "V3")}}
-              <input type="text" name="data.characteristics.{{id}}.value" value="{{characteristic.value}}" data-dtype="Number" pattern="[0-{{ ../maxAttribute }}]" class="v3-adjustable-field" data-adjust-path="system.characteristics.{{id}}.value" data-adjust-min="0" data-adjust-max="{{../maxAttribute}}" data-adjust-default="0" readonly />
+              <input type="text" value="{{characteristic.value}}" data-dtype="Number" pattern="[0-{{ ../maxAttribute }}]" class="v3-adjustable-field" data-adjust-path="system.characteristics.{{id}}.value" data-adjust-min="0" data-adjust-max="{{../maxAttribute}}" data-adjust-default="0" readonly tabindex="-1" />
               {{else}}
               <input type="text" name="data.characteristics.{{id}}.value" value="{{characteristic.value}}" data-dtype="Number" pattern="[0-{{ ../maxAttribute }}]" {{#if ../disabled }}disabled{{/if }}/>
               {{/if}}
