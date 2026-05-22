@@ -790,8 +790,7 @@ img {
 .starwarsffg .resource input {
   width: 45px;
 }
-.starwarsffg.sheet.actor.v3 .character .v3-level-stat .block-title,
-.starwarsffg.sheet.actor.v3 .character .v3-level-stat .block-title.v3-level-title {
+.starwarsffg.sheet.actor.v3 .character .v3-level-title {
   background-color: #CB5C2E !important;
 }
 .starwarsffg .tabs {
