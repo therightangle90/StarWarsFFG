@@ -14,6 +14,9 @@ export class ActorSheetFFGV3 extends ActorSheetFFGV2 {
         return false;
       case "enableEditMode":
         return true;
+      case "hideObligationDutyMoralityTab":
+      case "hideCharacterPurchaseButtons":
+        return true;
       default:
         return super.getSheetOptionDefault(optionName, fallback);
     }
@@ -58,9 +61,7 @@ export class ActorSheetFFGV3 extends ActorSheetFFGV2 {
 
     const rawActor = this.actor.toObject();
     const rawValue = Number(foundry.utils.getProperty(rawActor, path) ?? fallback);
-    const currentValue = Number(foundry.utils.getProperty(this.actor, path) ?? fallback);
-
-    if (delta > 0 && max !== null && currentValue >= max) {
+    if (delta > 0 && max !== null && rawValue >= max) {
       return;
     }
 

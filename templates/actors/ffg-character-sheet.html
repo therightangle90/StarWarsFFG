@@ -30,7 +30,9 @@
                   {{/each_when}}
                 </td>
                 <td style="{{#if limited}}display:none;{{/if}}">
+                  {{#if sheetConfig.hideCharacterPurchaseButtons}}{{else}}
                   <i class="fa-regular fa-circle-up ffg-purchase" data-buy-action="signatureability" title="{{localize "SWFFG.Actors.Sheets.Purchase.Tooltip.SignatureAbility"}}"></i>
+                  {{/if}}
                   {{localize "SWFFG.SignatureAbilities"}}:
                 </td>
                 <td style="{{#if limited}}display:none;{{/if}}">
@@ -43,6 +45,55 @@
                   {{/each_when}}
                 </td>
               </tr>
+              {{#if (contains classType "V3")}}
+              <tr style="{{#if limited}}display:none;{{/if}}">
+                <td>
+                  {{localize "SWFFG.Career"}}:
+                </td>
+                <td>
+                  {{#each_when actor.items "type" "career"}}
+                  <div class="career-pill item" data-item-id="{{item._id}}">{{item.name}} <i class="fas fa-times item-delete"></i></div>
+                  {{else}}
+                  <div class="drag-note">{{localize "SWFFG.DragNotes"}}</div>
+                  {{/each_when}}
+                </td>
+                <td>
+                  {{localize "SWFFG.DescriptionMorality"}}:
+                </td>
+                <td>
+                  {{#each_when actor.items "type" "moralitythreshold"}}
+                  <div class="moralitythreshold-pill item" data-item-id="{{item._id}}">
+                    {{item.name}} <i class="fas fa-times item-delete"></i>
+                  </div>
+                  {{else}}
+                  <div class="drag-note">{{localize "SWFFG.DragNotes"}}</div>
+                  {{/each_when}}
+                </td>
+              </tr>
+              <tr style="{{#if limited}}display:none;{{/if}}">
+                <td>
+                  {{#if sheetConfig.hideCharacterPurchaseButtons}}{{else}}
+                  {{#if (or (eq actor.flags.starwarsffg.config.enableForcePool undefined) (eq actor.flags.starwarsffg.config.enableForcePool true) )}}
+                  <i class="fa-regular fa-circle-up ffg-purchase" data-buy-action="forcepower" title="{{localize "SWFFG.Actors.Sheets.Purchase.Tooltip.ForcePower"}}"></i>
+                  {{/if}}
+                  {{/if}}
+                  {{localize "SWFFG.ForcePowers"}}:
+                </td>
+                <td>
+                  {{#if (or (eq actor.flags.starwarsffg.config.enableForcePool undefined) (eq actor.flags.starwarsffg.config.enableForcePool true) )}}
+                  {{#each_when actor.items "type" "forcepower"}}
+                  <div class="forcepower-pill item" data-item-id="{{item._id}}">
+                    {{item.name}} <i class="fas fa-times item-delete"></i>
+                  </div>
+                  {{else}}
+                  <div class="drag-note">{{localize "SWFFG.DragNotes"}}</div>
+                  {{/each_when}}
+                  {{/if}}
+                </td>
+                <td></td>
+                <td></td>
+              </tr>
+              {{else}}
               <tr style="{{#if limited}}display:none;{{/if}}">
                 <td>
                   {{localize "SWFFG.Career"}}:
@@ -72,9 +123,12 @@
                   {{/if}}
                 </td>
               </tr>
+              {{/if}}
               <tr style="{{#if limited}}display:none;{{/if}}">
                 <td>
+                  {{#if sheetConfig.hideCharacterPurchaseButtons}}{{else}}
                   <i class="fa-regular fa-circle-up ffg-purchase" data-buy-action="specialization" title="{{localize "SWFFG.Actors.Sheets.Purchase.Tooltip.Specialization" }}"></i>
+                  {{/if}}
                   {{localize "SWFFG.Specializations"}}:
                 </td>
                 <td>
@@ -110,18 +164,20 @@
 
       {{!-- Primary Stats Container --}}
       <div class="container" style="flex-wrap: nowrap;{{#if limited}}display:none;{{/if}}">
-        <div class="container flex-group-center">
+        <div class="container flex-group-center {{#if (contains classType "V3")}}v3-primary-stats{{/if}}">
           {{#if (contains classType "V3")}}
-          <div class="resource single">
+          <div class="v3-half-stat v3-level-stat">
+            <div class="resource single">
             <div class="attribute flex-group-center">
               <div class="block-background">
-                <div class="block-title">Level</div>
+                <div class="block-title">{{localize "SWFFG.Level"}}</div>
                 <div class="block-attribute">
                   <div class="block-value block-single">
                     <input type="text" value="{{#if data.stats.level.value}}{{data.stats.level.value}}{{else}}1{{/if}}" data-dtype="Number" class="v3-adjustable-field" data-adjust-path="system.stats.level.value" data-adjust-min="1" data-adjust-default="1" readonly />
                   </div>
                 </div>
               </div>
+            </div>
             </div>
           </div>
           {{/if}}
@@ -134,7 +190,13 @@
           {{/if}}
 
           {{!-- Soak Box --}}
+          {{#if (contains classType "V3")}}
+          <div class="v3-half-stat v3-soak-stat">
+            {{> "systems/starwarsffg/templates/parts/shared/ffg-block.html" (object blocktype="single" title="SWFFG.Soak" type="Number" name="data.stats.soak.value" value=data.stats.soak.value disabled=disabled)}}
+          </div>
+          {{else}}
           {{> "systems/starwarsffg/templates/parts/shared/ffg-block.html" (object blocktype="single" title="SWFFG.Soak" type="Number" name="data.stats.soak.value" value=data.stats.soak.value disabled=disabled)}}
+          {{/if}}
 
           {{!-- Defence Box --}}
           {{> "systems/starwarsffg/templates/parts/shared/ffg-block.html" (object blocktype="split" title="SWFFG.Defense" fields=(array (object name="data.stats.defence.melee" value=data.stats.defence.melee type="Number" label="SWFFG.DefenseMelee" disabled=disabled) (object name="data.stats.defence.ranged" value=data.stats.defence.ranged type="Number" label="SWFFG.DefenseRanged" disabled=disabled) ))}}

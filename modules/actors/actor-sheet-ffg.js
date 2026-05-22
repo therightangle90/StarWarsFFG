@@ -223,6 +223,8 @@ export class ActorSheetFFG extends ActorSheet {
     const enableMorality = this.getSheetOptionValue("enableMorality", true);
     const enableConflict = this.getSheetOptionValue("enableConflict", true);
     const enableEditMode = this.getSheetOptionValue("enableEditMode", false);
+    const hideObligationDutyMoralityTab = this.getSheetOptionValue("hideObligationDutyMoralityTab", false);
+    const hideCharacterPurchaseButtons = this.getSheetOptionValue("hideCharacterPurchaseButtons", false);
 
     data.settings = {
       enableSoakCalculation: autoSoakCalculation,
@@ -234,6 +236,8 @@ export class ActorSheetFFG extends ActorSheet {
       enableMorality,
       enableConflict,
       enableEditMode,
+      hideObligationDutyMoralityTab,
+      hideCharacterPurchaseButtons,
     };
 
     // Establish sheet width and height using either saved persistent values or default values defined in swffg-config.js
@@ -312,7 +316,7 @@ export class ActorSheetFFG extends ActorSheet {
       data.data.skilllist = this._createSkillColumns(data);
     }
 
-    if (enableObligation === false && enableDuty === false && enableMorality === false && enableConflict === false) {
+    if (hideObligationDutyMoralityTab || (enableObligation === false && enableDuty === false && enableMorality === false && enableConflict === false)) {
       data.hideObligationDutyMoralityConflictTab = true;
     }
     if (this.actor.flags?.starwarsffg?.xpLog) {
@@ -388,7 +392,7 @@ export class ActorSheetFFG extends ActorSheet {
         if (item.isEmbedded && item.parent.documentName === "Actor") {
           const actor = item.actor
           // we only allow one species and one career, find any other species and remove them.
-          if (item.type === "species" || item.type === "career") {
+          if (item.type === "species" || item.type === "career" || item.type === "moralitythreshold") {
             if (["character", "nemesis", "rival"].includes(actor.type)) {
               const itemToDelete = actor.items.filter((i) => (i.type === item.type) && (i.id !== item.id));
               itemToDelete.forEach((i) => {
@@ -411,7 +415,7 @@ export class ActorSheetFFG extends ActorSheet {
           }
 
           // Prevent adding of character data type items to vehicles
-          if (["career", "forcepower", "talent", "signatureability", "specialization", "species", "ability"].includes(item.type.toString()) && actor.type === "vehicle") {
+          if (["career", "forcepower", "talent", "signatureability", "specialization", "species", "ability", "moralitythreshold"].includes(item.type.toString()) && actor.type === "vehicle") {
             ui.notifications.warn(`Item type '${item.type}' cannot be added to 'vehicle' actor types.`);
             return false;
           }
@@ -594,6 +598,12 @@ export class ActorSheetFFG extends ActorSheet {
         type: "Boolean",
         default: this.getSheetOptionDefault("enableDuty", true),
       });
+      this.sheetoptions.register("hideObligationDutyMoralityTab", {
+        name: game.i18n.localize("SWFFG.HideObligationDutyMoralityTab"),
+        hint: game.i18n.localize("SWFFG.HideObligationDutyMoralityTabHint"),
+        type: "Boolean",
+        default: this.getSheetOptionDefault("hideObligationDutyMoralityTab", false),
+      });
       this.sheetoptions.register("enableMorality", {
         name: game.i18n.localize("SWFFG.EnableMorality"),
         hint: game.i18n.localize("SWFFG.EnableMoralityHint"),
@@ -624,6 +634,12 @@ export class ActorSheetFFG extends ActorSheet {
         type: "Array",
         default: 0,
         options: [game.i18n.localize("SWFFG.UseGlobalSetting"), game.i18n.localize("SWFFG.OptionValueYes"), game.i18n.localize("SWFFG.OptionValueNo")],
+      });
+      this.sheetoptions.register("hideCharacterPurchaseButtons", {
+        name: game.i18n.localize("SWFFG.HideCharacterPurchaseButtons"),
+        hint: game.i18n.localize("SWFFG.HideCharacterPurchaseButtonsHint"),
+        type: "Boolean",
+        default: this.getSheetOptionDefault("hideCharacterPurchaseButtons", false),
       });
     }
 

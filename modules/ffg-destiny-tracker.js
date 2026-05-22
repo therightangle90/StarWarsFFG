@@ -167,9 +167,11 @@ export default class DestinyTracker extends FormApplication {
 
     // handle previously created roll destiny chat messages
     $(".ffg-destiny-roll").on("click", this.OnClickRollDestiny.bind(this));
+    this._hideDestinyRollMessagesForCurrentUser();
 
     // setup chat hook for destiny roll
     Hooks.on("renderChatMessage", (app, html, messageData) => {
+      this._hideDestinyRollMessageForCurrentUser(html, app.id);
       html.on("click", ".ffg-destiny-roll", this.OnClickRollDestiny.bind(this));
     });
 
@@ -256,6 +258,7 @@ export default class DestinyTracker extends FormApplication {
   async OnClickRollDestiny(event) {
     event.preventDefault();
     event.stopPropagation();
+    await this._hideClickedDestinyRollMessage(event);
     if (!game.user.isGM) {
       await game.socket.emit("system.starwarsffg", { canIRollDestiny: game.user.id });
     }
@@ -269,6 +272,48 @@ export default class DestinyTracker extends FormApplication {
       await game.settings.set("starwarsffg", "dPoolLight", light + roll.ffg.light);
       await game.settings.set("starwarsffg", "dPoolDark", dark + roll.ffg.dark);
     }
+  }
+
+  _getHiddenDestinyRollMessages() {
+    const hiddenMessages = game.user.getFlag("starwarsffg", "hiddenDestinyRollMessages");
+    return Array.isArray(hiddenMessages) ? hiddenMessages : [];
+  }
+
+  async _hideClickedDestinyRollMessage(event) {
+    if (game.user.isGM) {
+      return;
+    }
+    const messageElement = $(event.currentTarget).closest(".message");
+    const messageId = messageElement.data("messageId");
+    if (!messageId) {
+      return;
+    }
+    const hiddenMessages = this._getHiddenDestinyRollMessages();
+    if (!hiddenMessages.includes(messageId)) {
+      hiddenMessages.push(messageId);
+      await game.user.setFlag("starwarsffg", "hiddenDestinyRollMessages", hiddenMessages);
+    }
+    messageElement.hide();
+  }
+
+  _hideDestinyRollMessageForCurrentUser(html, messageId) {
+    if (game.user.isGM) {
+      return;
+    }
+    const hiddenMessages = this._getHiddenDestinyRollMessages();
+    if (hiddenMessages.includes(messageId)) {
+      html.hide();
+    }
+  }
+
+  _hideDestinyRollMessagesForCurrentUser() {
+    if (game.user.isGM) {
+      return;
+    }
+    const hiddenMessages = this._getHiddenDestinyRollMessages();
+    hiddenMessages.forEach((messageId) => {
+      $(`.message[data-message-id="${messageId}"]`).hide();
+    });
   }
 
   async _processDestinyRequests() {
