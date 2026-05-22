@@ -377,7 +377,7 @@ img {
   display: table-cell;
 }
 
-.starwarsffg.sheet.actor .character .header-fields .specialization-pill, .starwarsffg.sheet.actor .character .header-fields .species-pill, .starwarsffg.sheet.actor .character .header-fields .career-pill, .starwarsffg.sheet.actor .character .header-fields .signatureability-pill, .starwarsffg.sheet.actor .character .header-fields .forcepower-pill {
+.starwarsffg.sheet.actor .character .header-fields .specialization-pill, .starwarsffg.sheet.actor .character .header-fields .species-pill, .starwarsffg.sheet.actor .character .header-fields .career-pill, .starwarsffg.sheet.actor .character .header-fields .signatureability-pill, .starwarsffg.sheet.actor .character .header-fields .forcepower-pill, .starwarsffg.sheet.actor .character .header-fields .moralitythreshold-pill {
   padding: 0.1rem 0.5rem;
   background-color: rgba(255, 255, 255, 0.25);
   border: 1px solid rgba(255, 255, 255, 0.5);
@@ -386,7 +386,7 @@ img {
   width: fit-content;
 }
 
-.starwarsffg.sheet.actor .character .header-fields .specialization-pill .item-delete, .starwarsffg.sheet.actor .character .header-fields .species-pill .item-delete, .starwarsffg.sheet.actor .character .header-fields .career-pill .item-delete, .starwarsffg.sheet.actor .character .header-fields .signatureability-pill .item-delete, .starwarsffg.sheet.actor .character .header-fields .forcepower-pill .item-delete {
+.starwarsffg.sheet.actor .character .header-fields .specialization-pill .item-delete, .starwarsffg.sheet.actor .character .header-fields .species-pill .item-delete, .starwarsffg.sheet.actor .character .header-fields .career-pill .item-delete, .starwarsffg.sheet.actor .character .header-fields .signatureability-pill .item-delete, .starwarsffg.sheet.actor .character .header-fields .forcepower-pill .item-delete, .starwarsffg.sheet.actor .character .header-fields .moralitythreshold-pill .item-delete {
   cursor: pointer;
 }
 
@@ -901,6 +901,15 @@ img {
 .starwarsffg .attribute .block-value input:focus {
   box-shadow: 0 0 5px #7da9c2;
   background-color: #7da9c2;
+}
+
+.starwarsffg .v3-level-title {
+  background-color: #CB5C2E !important;
+}
+
+.starwarsffg.sheet.actor.v3 .character .header-fields .v3-level-box,
+.starwarsffg.sheet.actor.v3 .character .header-fields .resource.single.data\.stats\.soak\.value {
+  flex: 2.67;
 }
 
 .starwarsffg .injuries .attribute .block-title {
