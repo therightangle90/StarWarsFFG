@@ -2269,6 +2269,9 @@ img {
   height: 1.5rem;
   width: 1.75rem;
   text-align: center;
+  border: none;
+  outline: none;
+  background: transparent;
 }
 
 .starwarsffg .skillsGrid .dice-pool {

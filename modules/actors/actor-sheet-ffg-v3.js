@@ -14,9 +14,6 @@ export class ActorSheetFFGV3 extends ActorSheetFFGV2 {
         return false;
       case "enableEditMode":
         return true;
-      case "hideObligationDutyMoralityTab":
-      case "hideCharacterPurchaseButtons":
-        return true;
       default:
         return super.getSheetOptionDefault(optionName, fallback);
     }

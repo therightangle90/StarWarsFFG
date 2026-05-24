@@ -79,7 +79,107 @@ Hooks.on("getSceneControlButtons", (controls) => {
       new GroupManager().render(true);
     },
   });
+
+  tokenControls.tools.push({
+    name: "critical-injury",
+    title: game.i18n.localize("SWFFG.CriticalInjury"),
+    icon: "fas fa-droplet",
+    button: true,
+    visible: true,
+    onClick: () => {
+      _rollCriticalInjury();
+    },
+  });
 });
+
+async function _rollCriticalInjury() {
+  const compendiumName = "world.critical-injuries";
+
+  const actor = canvas.tokens.controlled[0]?.actor;
+  if (!actor) {
+    ui.notifications.info(game.i18n.localize("SWFFG.CriticalInjurySelectToken"));
+    return;
+  }
+
+  const injuries = actor.items.filter(i => i.type === "criticalinjury");
+
+  const deadInjury = injuries.find(i => i.name === "Dead");
+  if (deadInjury) {
+    ui.notifications.info(`${actor.name} ${game.i18n.localize("SWFFG.CriticalInjuryIsDead")}`);
+    return;
+  }
+
+  const manualModifier = await new Promise((resolve) => {
+    new Dialog({
+      title: game.i18n.localize("SWFFG.CriticalInjuryModifierTitle"),
+      content: `<p>${game.i18n.localize("SWFFG.CriticalInjuryModifierPrompt")}</p><input type="number" id="manualMod" value="0" />`,
+      buttons: {
+        ok: {
+          label: game.i18n.localize("SWFFG.ButtonRoll"),
+          callback: (html) => {
+            const val = parseInt(html.find("#manualMod").val()) || 0;
+            resolve(val);
+          }
+        },
+        cancel: {
+          label: game.i18n.localize("SWFFG.Cancel"),
+          callback: () => resolve(null)
+        }
+      },
+      default: "ok",
+      render: (html) => {
+        const input = html.find("#manualMod")[0];
+        setTimeout(() => {
+          input.focus();
+          input.select();
+        }, 50);
+      }
+    }).render(true);
+  });
+
+  if (manualModifier === null) {
+    return;
+  }
+
+  const critCount = injuries.length;
+  const totalModifier = critCount * 10 + manualModifier;
+
+  const baseRoll = await new Roll("1d100").roll({async: true});
+  const rollTotal = baseRoll.total + totalModifier;
+
+  await baseRoll.toMessage({flavor: game.i18n.localize("SWFFG.CriticalInjuryRolling")});
+
+  const pack = game.packs.get(compendiumName);
+  if (!pack) {
+    ui.notifications.error(`${game.i18n.localize("SWFFG.CriticalInjuryCompendiumNotFound")}: '${compendiumName}'`);
+    return;
+  }
+  const entries = await pack.getDocuments();
+
+  const match = entries.find(entry => {
+    const min = entry.system.min ?? 0;
+    const max = entry.system.max ?? 0;
+    return rollTotal >= min && rollTotal <= max;
+  });
+
+  if (!match) {
+    ui.notifications.error(`${game.i18n.localize("SWFFG.CriticalInjuryNoMatch")}: ${rollTotal}`);
+    return;
+  }
+
+  const imgSrc = match.img || "";
+  const imgHTML = imgSrc ? `<p style="text-align:center;"><img src="${match.img}" style="max-width:75px; height:auto;" /></p>` : "";
+
+  await actor.createEmbeddedDocuments("Item", [match.toObject()]);
+
+  ChatMessage.create({
+    content: `<h2>${game.i18n.localize("SWFFG.CriticalInjuryResult")}</h2>
+              <p>${game.i18n.localize("SWFFG.Roll")} (+${totalModifier} ${game.i18n.localize("SWFFG.CriticalInjuryModifier")}): <strong>${rollTotal}</strong></p>
+              <p><strong>${match.name}</strong></p>
+              ${imgHTML}
+              ${match.system.description || ""}`
+  });
+}
 
 Hooks.on("setup", function (){
   // add dice symbol rendering to the text editor for journal pages
@@ -1255,6 +1355,14 @@ Hooks.once("ready", async () => {
     if (item.isEmbedded && item.parent.documentName === "Actor") {
       const actor = item.actor
       if (item.type === "species" && actor.type === "character") {
+        // Ensure the species has its inherent Active Effect (may be missing if imported or created externally)
+        const existingEffects = item.getEmbeddedCollection("ActiveEffect");
+        const inherentEffect = existingEffects.find(e => e.name === "(inherent)");
+        if (!inherentEffect) {
+          CONFIG.logger.debug(`Species "${item.name}" is missing (inherent) AE on embed; creating it now`);
+          await item._onCreateAEs(options, true);
+        }
+
         const toAdd = [];
         // talents
         for(const talentId of Object.keys(item.system.talents)) {
@@ -1293,7 +1401,7 @@ Hooks.once("ready", async () => {
   });
   // data for _onDropItemCreate has system.encumbrance.adjusted = 0, despite it being proper in the item itself
   Hooks.on("deleteItem", (item, options, userId) => {
-    // remove talents added by species
+    // remove talents and abilities added by species
     if (item.isEmbedded && item.parent.documentName === "Actor") {
       const actor = item.actor
       if (item.type === "species" && actor.type === "character") {
@@ -1305,6 +1413,9 @@ Hooks.once("ready", async () => {
             toDelete.push(actorTalent.id);
           }
         }
+        // also remove abilities granted by this species (marked with fromSpecies flag)
+        const speciesAbilities = actor.items.filter(i => i.type === "ability" && i.flags?.starwarsffg?.fromSpecies);
+        speciesAbilities.forEach(ability => toDelete.push(ability.id));
         if (toDelete.length > 0) {
           actor.deleteEmbeddedDocuments("Item", toDelete);
         }

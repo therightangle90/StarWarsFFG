@@ -84,18 +84,19 @@ export class ActorFFG extends Actor {
 
     CONFIG.logger.debug(`Performing pre-update on ${this.name}`);
     if (["character", "rival", "nemesis"].includes(this.type)) {
-      const originalBrawn = this.system.characteristics.Brawn.value;
+      const rawActorData = this.toObject();
+      const originalRawBrawn = foundry.utils.getProperty(rawActorData, "system.characteristics.Brawn.value") ?? 0;
       const updatedBrawn = changes?.system?.characteristics?.Brawn?.value;
-      if (originalBrawn !== undefined && updatedBrawn !== undefined && originalBrawn !== updatedBrawn) {
-        CONFIG.logger.debug(`Detected modified Brawn (${originalBrawn} -> ${updatedBrawn}, updating derived values`);
-        // get the wounds without brawn modifying it, then add the new brawn value in
-        const originalWounds = this.system.stats?.wounds.max;
-        const originalWoundsWithoutBrawn = originalWounds - originalBrawn;
-        const updatedWounds = originalWoundsWithoutBrawn + updatedBrawn;
+      if (updatedBrawn !== undefined && originalRawBrawn !== updatedBrawn) {
+        const brawnDelta = updatedBrawn - originalRawBrawn;
+        CONFIG.logger.debug(`Detected modified Brawn (raw ${originalRawBrawn} -> ${updatedBrawn}, delta ${brawnDelta}), updating derived values`);
         if (!Object.keys(changes.system).includes("stats")) {
           changes.system.stats = {};
         }
-        CONFIG.logger.debug(`The character sheet showed ${originalWounds} wounds, while that value without Brawn was ${originalWoundsWithoutBrawn}. Updating to be ${updatedWounds}`);
+        // Adjust wounds by the raw brawn delta
+        const originalRawWounds = foundry.utils.getProperty(rawActorData, "system.stats.wounds.max") ?? 0;
+        const updatedWounds = originalRawWounds + brawnDelta;
+        CONFIG.logger.debug(`Adjusting raw wounds.max from ${originalRawWounds} to ${updatedWounds} (delta ${brawnDelta})`);
         changes.system.stats = foundry.utils.mergeObject(
           changes.system.stats,
           {
@@ -104,11 +105,10 @@ export class ActorFFG extends Actor {
             }
           }
         );
-        // repeat the above process, but for soak
-        const originalSoak = this.system.stats?.soak.value;
-        const originalSoakWithoutBrawn = originalSoak - originalBrawn;
-        const updatedSoak = originalSoakWithoutBrawn + updatedBrawn;
-        CONFIG.logger.debug(`The character sheet showed ${originalSoak} soak, while that value without Brawn was ${originalSoakWithoutBrawn}. Updating to be ${updatedSoak}`);
+        // Adjust soak by the raw brawn delta
+        const originalRawSoak = foundry.utils.getProperty(rawActorData, "system.stats.soak.value") ?? 0;
+        const updatedSoak = originalRawSoak + brawnDelta;
+        CONFIG.logger.debug(`Adjusting raw soak.value from ${originalRawSoak} to ${updatedSoak} (delta ${brawnDelta})`);
         changes.system.stats = foundry.utils.mergeObject(
           changes.system.stats,
           {
@@ -118,16 +118,18 @@ export class ActorFFG extends Actor {
           }
         );
       }
-      const originalWillpower = this.system.characteristics.Willpower.value;
+      const originalRawWillpower = foundry.utils.getProperty(rawActorData, "system.characteristics.Willpower.value") ?? 0;
       const updatedWillpower = changes.system?.characteristics?.Willpower?.value;
-      if (originalWillpower !== undefined && updatedWillpower !== undefined && originalWillpower !== updatedWillpower) {
-        CONFIG.logger.debug(`Detected modified Willpower (${originalWillpower} -> ${updatedWillpower}, updating derived values`);
+      if (updatedWillpower !== undefined && originalRawWillpower !== updatedWillpower) {
+        const willpowerDelta = updatedWillpower - originalRawWillpower;
+        CONFIG.logger.debug(`Detected modified Willpower (raw ${originalRawWillpower} -> ${updatedWillpower}, delta ${willpowerDelta}), updating derived values`);
         if (this.system.stats?.strain) {
-          // get the soak without willpower modifying it, then add the new willpower value in
-          const originalStrain = this.system.stats?.strain.max;
-          const originalStrainWithoutWillpower = originalStrain - originalWillpower;
-          const updatedStrain = originalStrainWithoutWillpower + updatedWillpower;
-          CONFIG.logger.debug(`The character sheet showed ${originalStrain} strain, while that value without Willpower was ${originalStrainWithoutWillpower}. Updating to be ${updatedStrain}`);
+          if (!Object.keys(changes.system).includes("stats")) {
+            changes.system.stats = {};
+          }
+          const originalRawStrain = foundry.utils.getProperty(rawActorData, "system.stats.strain.max") ?? 0;
+          const updatedStrain = originalRawStrain + willpowerDelta;
+          CONFIG.logger.debug(`Adjusting raw strain.max from ${originalRawStrain} to ${updatedStrain} (delta ${willpowerDelta})`);
           changes.system.stats = foundry.utils.mergeObject(
             changes.system.stats,
             {

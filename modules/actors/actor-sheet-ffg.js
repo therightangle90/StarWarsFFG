@@ -226,8 +226,6 @@ export class ActorSheetFFG extends ActorSheet {
     const enableMorality = this.getSheetOptionValue("enableMorality", true);
     const enableConflict = this.getSheetOptionValue("enableConflict", true);
     const enableEditMode = this.getSheetOptionValue("enableEditMode", false);
-    const hideObligationDutyMoralityTab = this.getSheetOptionValue("hideObligationDutyMoralityTab", false);
-    const hideCharacterPurchaseButtons = this.getSheetOptionValue("hideCharacterPurchaseButtons", false);
 
     data.settings = {
       enableSoakCalculation: autoSoakCalculation,
@@ -239,8 +237,6 @@ export class ActorSheetFFG extends ActorSheet {
       enableMorality,
       enableConflict,
       enableEditMode,
-      hideObligationDutyMoralityTab,
-      hideCharacterPurchaseButtons,
     };
 
     // Establish sheet width and height using either saved persistent values or default values defined in swffg-config.js
@@ -319,9 +315,6 @@ export class ActorSheetFFG extends ActorSheet {
       data.data.skilllist = this._createSkillColumns(data);
     }
 
-    if (hideObligationDutyMoralityTab || (enableObligation === false && enableDuty === false && enableMorality === false && enableConflict === false)) {
-      data.hideObligationDutyMoralityConflictTab = true;
-    }
     if (this.actor.flags?.starwarsffg?.xpLog) {
       data.xpLog = this.object.getFlag("starwarsffg", "xpLog") || [];
     }
@@ -568,12 +561,6 @@ export class ActorSheetFFG extends ActorSheet {
         type: "Boolean",
         default: true,
       });
-      this.sheetoptions.register("enableForcePool", {
-        name: game.i18n.localize("SWFFG.EnableForcePool"),
-        hint: game.i18n.localize("SWFFG.EnableForcePoolHint"),
-        type: "Boolean",
-        default: true,
-      });
     }
     if (this.actor.type === "character") {
       this.sheetoptions = new ActorOptions(this, html);
@@ -601,12 +588,6 @@ export class ActorSheetFFG extends ActorSheet {
         type: "Boolean",
         default: this.getSheetOptionDefault("enableDuty", true),
       });
-      this.sheetoptions.register("hideObligationDutyMoralityTab", {
-        name: game.i18n.localize("SWFFG.HideObligationDutyMoralityTab"),
-        hint: game.i18n.localize("SWFFG.HideObligationDutyMoralityTabHint"),
-        type: "Boolean",
-        default: this.getSheetOptionDefault("hideObligationDutyMoralityTab", false),
-      });
       this.sheetoptions.register("enableMorality", {
         name: game.i18n.localize("SWFFG.EnableMorality"),
         hint: game.i18n.localize("SWFFG.EnableMoralityHint"),
@@ -616,12 +597,6 @@ export class ActorSheetFFG extends ActorSheet {
       this.sheetoptions.register("enableConflict", {
         name: game.i18n.localize("SWFFG.EnableConflict"),
         hint: game.i18n.localize("SWFFG.EnableConflictHint"),
-        type: "Boolean",
-        default: true,
-      });
-      this.sheetoptions.register("enableForcePool", {
-        name: game.i18n.localize("SWFFG.EnableForcePool"),
-        hint: game.i18n.localize("SWFFG.EnableForcePoolHint"),
         type: "Boolean",
         default: true,
       });
@@ -637,12 +612,6 @@ export class ActorSheetFFG extends ActorSheet {
         type: "Array",
         default: 0,
         options: [game.i18n.localize("SWFFG.UseGlobalSetting"), game.i18n.localize("SWFFG.OptionValueYes"), game.i18n.localize("SWFFG.OptionValueNo")],
-      });
-      this.sheetoptions.register("hideCharacterPurchaseButtons", {
-        name: game.i18n.localize("SWFFG.HideCharacterPurchaseButtons"),
-        hint: game.i18n.localize("SWFFG.HideCharacterPurchaseButtonsHint"),
-        type: "Boolean",
-        default: this.getSheetOptionDefault("hideCharacterPurchaseButtons", false),
       });
     }
 

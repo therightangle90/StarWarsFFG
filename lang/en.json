@@ -848,5 +848,15 @@
   "SWFFG.Status.Staggered": "Staggered",
   "SWFFG.Status.Defeated": "Defeated",
   "SWFFG.Roll.ForcePowers.NoDice": "Cannot roll, all Force Dice are committed!",
-  "SWFFG.CareerSkills.None": "(none)"
+  "SWFFG.CareerSkills.None": "(none)",
+  "SWFFG.CriticalInjury": "Critical Injury",
+  "SWFFG.CriticalInjurySelectToken": "Please select a token with an actor.",
+  "SWFFG.CriticalInjuryIsDead": "is dead and cannot sustain further critical injuries.",
+  "SWFFG.CriticalInjuryModifierTitle": "Add Manual Modifier",
+  "SWFFG.CriticalInjuryModifierPrompt": "Enter additional modifier to add to the roll:",
+  "SWFFG.CriticalInjuryModifier": "modifier",
+  "SWFFG.CriticalInjuryRolling": "Rolling for Critical Injury...",
+  "SWFFG.CriticalInjuryCompendiumNotFound": "Compendium not found",
+  "SWFFG.CriticalInjuryNoMatch": "No Critical Injury found for roll",
+  "SWFFG.CriticalInjuryResult": "Critical Injury Result"
 }

@@ -42,7 +42,7 @@ export class GroupManager extends FormApplication {
       classes: ["starwarsffg", "form", "group-manager"],
       closeOnSubmit: false,
       submitOnChange: true,
-      submitOnClose: true,
+      submitOnClose: false,
       popOut: true,
       editable: game.user.isGM,
       resizable: true,
@@ -137,25 +137,29 @@ export class GroupManager extends FormApplication {
 
     // Flip destiny pool DARK to LIGHT
     html.find(".destiny-flip-dtl").click((ev) => {
-      let LightPool = this.form.elements["dPool.light"].value;
-      let DarkPool = this.form.elements["dPool.dark"].value;
+      let LightPool = parseInt(this.form.elements["dPool.light"].value) || 0;
+      let DarkPool = parseInt(this.form.elements["dPool.dark"].value) || 0;
       if (DarkPool > 0) {
         LightPool++;
         DarkPool--;
         this.form.elements["dPool.light"].value = LightPool;
         this.form.elements["dPool.dark"].value = DarkPool;
+        game.settings.set("starwarsffg", "dPoolLight", LightPool);
+        game.settings.set("starwarsffg", "dPoolDark", DarkPool);
       }
     });
 
     // Flip destiny pool LIGHT to DARK
     html.find(".destiny-flip-ltd").click((ev) => {
-      let LightPool = this.form.elements["dPool.light"].value;
-      let DarkPool = this.form.elements["dPool.dark"].value;
+      let LightPool = parseInt(this.form.elements["dPool.light"].value) || 0;
+      let DarkPool = parseInt(this.form.elements["dPool.dark"].value) || 0;
       if (LightPool > 0) {
         LightPool--;
         DarkPool++;
         this.form.elements["dPool.light"].value = LightPool;
         this.form.elements["dPool.dark"].value = DarkPool;
+        game.settings.set("starwarsffg", "dPoolLight", LightPool);
+        game.settings.set("starwarsffg", "dPoolDark", DarkPool);
       }
     });
 
