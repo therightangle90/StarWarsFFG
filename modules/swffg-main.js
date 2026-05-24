@@ -93,7 +93,7 @@ Hooks.on("getSceneControlButtons", (controls) => {
 });
 
 async function _rollCriticalInjury() {
-  const compendiumName = game.settings.get("starwarsffg", "critInjuriesCompendium") || "world.critical-injuries";
+  const compendiumName = game.settings.get("starwarsffg", "critInjuriesCompendium") || "world.criticalinjuries";
 
   const actor = canvas.tokens.controlled[0]?.actor;
   if (!actor) {
@@ -468,7 +468,7 @@ Hooks.once("init", async function () {
     hint: game.i18n.localize("SWFFG.Settings.CritInjuriesCompendium.Hint"),
     scope: "world",
     config: true,
-    default: "world.critical-injuries",
+    default: "world.criticalinjuries",
     type: String,
   });
   game.settings.register("starwarsffg", "useDefense", {
