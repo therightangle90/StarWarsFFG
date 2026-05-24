@@ -858,5 +858,7 @@
   "SWFFG.CriticalInjuryRolling": "Rolling for Critical Injury...",
   "SWFFG.CriticalInjuryCompendiumNotFound": "Compendium not found",
   "SWFFG.CriticalInjuryNoMatch": "No Critical Injury found for roll",
-  "SWFFG.CriticalInjuryResult": "Critical Injury Result"
+  "SWFFG.CriticalInjuryResult": "Critical Injury Result",
+  "SWFFG.Settings.CritInjuriesCompendium.Name": "Critical Injuries Compendium",
+  "SWFFG.Settings.CritInjuriesCompendium.Hint": "The name of the compendium containing Critical Injury entries (e.g. world.critical-injuries)"
 }

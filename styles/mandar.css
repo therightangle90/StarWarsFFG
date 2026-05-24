@@ -2274,6 +2274,11 @@ img {
   background: transparent;
 }
 
+.starwarsffg .skillsGrid .skillTable .careerskill-rank:focus {
+  outline: 2px solid rgba(255, 255, 255, 0.5);
+  border-radius: 2px;
+}
+
 .starwarsffg .skillsGrid .dice-pool {
   margin: 0.5em 0;
   cursor: pointer;
