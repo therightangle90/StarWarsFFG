@@ -43,6 +43,7 @@ export class ActorSheetFFG extends ActorSheet {
       template: "systems/starwarsffg/templates/actors/ffg-character-sheet.html",
       width: 710,
       height: 650,
+      submitOnClose: false,
       tabs: [{ navSelector: ".sheet-tabs", contentSelector: ".sheet-body", initial: "characteristics" }],
       scrollY: [".tableWithHeader", ".tab", ".skillsGrid", ".skillsTablesGrid"],
     });
@@ -763,6 +764,9 @@ export class ActorSheetFFG extends ActorSheet {
     html.find(".items .item, .header-description-block .item, .injuries .item").click(async (ev) => {
       if (!$(ev.target).hasClass("fa-trash") && !$(ev.target).hasClass("fas") && !$(ev.target).hasClass("rollable")) {
         const li = $(ev.currentTarget);
+        if (li.hasClass("moralitythreshold-pill")) {
+          return;
+        }
         if (ev?.originalEvent?.target && !$(ev?.originalEvent?.target).hasClass("item-pill")) {
           let itemId = li.data("itemId");
           let item = this.actor.items.get(itemId);

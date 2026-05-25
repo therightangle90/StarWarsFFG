@@ -175,6 +175,10 @@ export class ActorFFG extends Actor {
       });
     }
 
+    if (actor.type === "character") {
+      this._recalculateCharacterDerivedThresholds(actor);
+    }
+
     // add values for above threshold
     if (["character", "nemesis"].includes(actor.type)) {
       data.stats.woundsOverThreshold = data.stats.wounds.value - data.stats.wounds.max;
@@ -193,6 +197,48 @@ export class ActorFFG extends Actor {
       this._prepareCharacterData(actor);
       this._prepareSources(actor);
     }
+  }
+
+  _recalculateCharacterDerivedThresholds(actorData) {
+    const data = actorData.system;
+    const species = actorData.items.find(i => i.type === "species");
+    if (!species) {
+      return;
+    }
+
+    const speciesBaseWounds = parseInt(species.system?.attributes?.Wounds?.value ?? 0, 10);
+    const speciesBaseStrain = parseInt(species.system?.attributes?.Strain?.value ?? 0, 10);
+    const brawn = parseInt(data.characteristics?.Brawn?.value ?? 0, 10);
+    const willpower = parseInt(data.characteristics?.Willpower?.value ?? 0, 10);
+
+    let woundBonus = 0;
+    let strainBonus = 0;
+    let soakBonus = 0;
+
+    const actorActiveEffects = actorData.getEmbeddedCollection("ActiveEffect");
+    for (const effect of actorActiveEffects) {
+      // Species base is handled explicitly above; avoid double-counting species effects.
+      if (effect.parent?.type === "species") {
+        continue;
+      }
+      for (const change of effect.changes) {
+        const numericValue = parseInt(change.value ?? 0, 10);
+        if (Number.isNaN(numericValue)) {
+          continue;
+        }
+        if (change.key === "system.stats.wounds.max") {
+          woundBonus += numericValue;
+        } else if (change.key === "system.stats.strain.max") {
+          strainBonus += numericValue;
+        } else if (change.key === "system.stats.soak.value") {
+          soakBonus += numericValue;
+        }
+      }
+    }
+
+    data.stats.wounds.max = speciesBaseWounds + brawn + woundBonus;
+    data.stats.strain.max = speciesBaseStrain + willpower + strainBonus;
+    data.stats.soak.value = brawn + soakBonus;
   }
 
   _prepareSharedData(actorData) {
