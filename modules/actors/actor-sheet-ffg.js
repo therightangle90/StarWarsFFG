@@ -764,6 +764,7 @@ export class ActorSheetFFG extends ActorSheet {
     html.find(".items .item, .header-description-block .item, .injuries .item").click(async (ev) => {
       if (!$(ev.target).hasClass("fa-trash") && !$(ev.target).hasClass("fas") && !$(ev.target).hasClass("rollable")) {
         const li = $(ev.currentTarget);
+        // Morality Threshold pills are display-only in the header; clicking them should do nothing.
         if (li.hasClass("moralitythreshold-pill")) {
           return;
         }
