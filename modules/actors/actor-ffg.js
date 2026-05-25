@@ -207,10 +207,10 @@ export class ActorFFG extends Actor {
     }
     const speciesIds = new Set(actorData.items.filter(i => i.type === "species").map(i => i.id));
 
-    const speciesBaseWounds = parseInt(species.system?.attributes?.Wounds?.value ?? 0, 10);
-    const speciesBaseStrain = parseInt(species.system?.attributes?.Strain?.value ?? 0, 10);
-    const brawn = parseInt(data.characteristics?.Brawn?.value ?? 0, 10);
-    const willpower = parseInt(data.characteristics?.Willpower?.value ?? 0, 10);
+    const speciesBaseWounds = Number(species.system?.attributes?.Wounds?.value ?? 0) || 0;
+    const speciesBaseStrain = Number(species.system?.attributes?.Strain?.value ?? 0) || 0;
+    const brawn = Number(data.characteristics?.Brawn?.value ?? 0) || 0;
+    const willpower = Number(data.characteristics?.Willpower?.value ?? 0) || 0;
 
     let woundBonus = 0;
     let strainBonus = 0;
@@ -221,12 +221,12 @@ export class ActorFFG extends Actor {
       // Species base is handled explicitly above; avoid double-counting species effects.
       const originParts = (effect.origin || "").split(".");
       const effectItemId = originParts.length >= 4 ? originParts[3] : null;
-      if (effect.parent?.type === "species" || (effectItemId && speciesIds.has(effectItemId))) {
+      if (effectItemId && speciesIds.has(effectItemId)) {
         continue;
       }
       for (const change of effect.changes) {
-        const numericValue = parseInt(change.value ?? 0, 10);
-        if (Number.isNaN(numericValue)) {
+        const numericValue = Number(change.value);
+        if (!Number.isFinite(numericValue)) {
           continue;
         }
         if (change.key === "system.stats.wounds.max") {
