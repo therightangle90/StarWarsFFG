@@ -205,7 +205,7 @@ export class ActorFFG extends Actor {
     if (!species) {
       return;
     }
-    const speciesIds = new Set(actorData.items.filter(i => i.type === "species").map(i => i.id));
+    const speciesId = species.id;
 
     const speciesBaseWounds = Number(species.system?.attributes?.Wounds?.value ?? 0) || 0;
     const speciesBaseStrain = Number(species.system?.attributes?.Strain?.value ?? 0) || 0;
@@ -216,12 +216,12 @@ export class ActorFFG extends Actor {
     let strainBonus = 0;
     let soakBonus = 0;
 
-    const actorActiveEffects = actorData.getEmbeddedCollection("ActiveEffect");
+    const actorActiveEffects = actorData.getEmbeddedCollection("ActiveEffect")?.contents || [];
     for (const effect of actorActiveEffects) {
       // Species base is handled explicitly above; avoid double-counting species effects.
       const originParts = (effect.origin || "").split(".");
       const effectItemId = originParts.length >= 4 ? originParts[3] : null;
-      if (effectItemId && speciesIds.has(effectItemId)) {
+      if (effectItemId && effectItemId === speciesId) {
         continue;
       }
       for (const change of effect.changes) {

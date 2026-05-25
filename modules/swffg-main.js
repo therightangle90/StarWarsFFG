@@ -144,7 +144,7 @@ async function _rollCriticalInjury() {
   const critCount = injuries.length;
   const totalModifier = critCount * 10 + manualModifier;
 
-  const baseRoll = await new Roll("1d100").evaluate();
+  const baseRoll = await new Roll("1d100").evaluate({async: true});
   const rollTotal = baseRoll.total + totalModifier;
 
   await baseRoll.toMessage({flavor: game.i18n.localize("SWFFG.CriticalInjuryRolling")});
