@@ -908,6 +908,7 @@ img {
 }
 
 .starwarsffg.sheet.actor.v3 .character .header-fields .v3-level-box,
+.starwarsffg.sheet.actor.v3 .character .header-fields .v3-destiny-box,
 .starwarsffg.sheet.actor.v3 .character .header-fields .resource.single.data\.stats\.soak\.value {
   flex: 2.67;
 }
@@ -1882,8 +1883,8 @@ img {
 
 .starwarsffg .header-fields .header-description-block {
   margin: 0;
-  height: 170px;
-  overflow-y: auto;
+  height: auto;
+  overflow: visible;
 }
 
 .starwarsffg .header-fields .header-description {

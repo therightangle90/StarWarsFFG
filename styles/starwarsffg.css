@@ -794,10 +794,12 @@ img {
   background-color: #CB5C2E !important;
 }
 .starwarsffg.sheet.actor.v3 .character .v3-level-box,
+.starwarsffg.sheet.actor.v3 .character .v3-destiny-box,
 .starwarsffg.sheet.actor.v3 .character .resource.single.data\.stats\.soak\.value {
   width: 67px;
 }
 .starwarsffg.sheet.actor.v3 .character .v3-level-box input,
+.starwarsffg.sheet.actor.v3 .character .v3-destiny-box input,
 .starwarsffg.sheet.actor.v3 .character .resource.single.data\.stats\.soak\.value input {
   width: 30px;
 }

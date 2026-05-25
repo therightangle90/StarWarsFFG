@@ -177,6 +177,7 @@ export class ActorFFG extends Actor {
 
     if (actor.type === "character") {
       this._recalculateCharacterDerivedThresholds(actor);
+      this._recalculateCharacterForcePool(actor);
     }
 
     // add values for above threshold
@@ -242,6 +243,30 @@ export class ActorFFG extends Actor {
     data.stats.wounds.max = speciesBaseWounds + brawn + woundBonus;
     data.stats.strain.max = speciesBaseStrain + willpower + strainBonus;
     data.stats.soak.value = brawn + soakBonus;
+  }
+
+  _getCharacterForcePoolMax() {
+    let maxForceRating = 0;
+    for (const effect of this.allApplicableEffects()) {
+      for (const change of effect.changes) {
+        if (change.key !== "system.stats.forcePool.max") {
+          continue;
+        }
+        const changeValue = Number(change.value);
+        if (Number.isFinite(changeValue)) {
+          maxForceRating += changeValue;
+        }
+      }
+    }
+    return Math.max(maxForceRating, 0);
+  }
+
+  _recalculateCharacterForcePool(actorData) {
+    const data = actorData.system;
+    const maxForceRating = this._getCharacterForcePoolMax();
+    const committedForce = Number(data.stats?.forcePool?.value ?? 0);
+    data.stats.forcePool.max = maxForceRating;
+    data.stats.forcePool.value = Math.min(Math.max(committedForce, 0), maxForceRating);
   }
 
   _prepareSharedData(actorData) {
@@ -704,20 +729,15 @@ export class ActorFFG extends Actor {
 
   /** @override **/
   applyActiveEffects() {
-    // collect force pool modifications since it appears the stat value is without AEs active
-    let maxForceRating = parseInt(this.system?.stats?.forcePool?.max);
-    for (const effect of this.allApplicableEffects()) {
-      for (const change of effect.changes) {
-        if (change.key === "system.stats.forcePool.max") {
-          maxForceRating += parseInt(change.value);
-        }
-      }
-    }
+    const maxForceRating = this.type === "character"
+      ? this._getCharacterForcePoolMax()
+      : Number(this.system?.stats?.forcePool?.max ?? 0);
+    const committedForce = Number(this.system?.stats?.forcePool?.value ?? 0);
     // apply the resulting value (minus any committed dice)
     for (const effect of this.allApplicableEffects()) {
       for (const change of effect.changes) {
         if (change.key.includes("system.skills") && change.key.includes(".force")) {
-          change.value = Math.max(maxForceRating - parseInt(this.system?.stats?.forcePool?.value), 0);
+          change.value = Math.max(maxForceRating - committedForce, 0);
         }
       }
     }
