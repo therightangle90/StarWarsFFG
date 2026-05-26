@@ -21,6 +21,7 @@ import {
 import {DicePoolFFG} from "../dice/pool.js";
 import {get_dice_pool} from "../helpers/dice-helpers.js";
 import {itemPillHover} from "../swffg-main.js";
+import {default_height, default_width} from "../config/ffg-sheetdefaults.js";
 
 export class ActorSheetFFG extends ActorSheet {
   constructor(...args) {
@@ -41,8 +42,8 @@ export class ActorSheetFFG extends ActorSheet {
     return foundry.utils.mergeObject(super.defaultOptions, {
       classes: ["starwarsffg", "sheet", "actor"],
       template: "systems/starwarsffg/templates/actors/ffg-character-sheet.html",
-      width: 800,
-      height: 980,
+      width: default_width.character,
+      height: default_height.character,
       submitOnClose: false,
       tabs: [{ navSelector: ".sheet-tabs", contentSelector: ".sheet-body", initial: "characteristics" }],
       scrollY: [".tableWithHeader", ".tab", ".skillsGrid", ".skillsTablesGrid"],

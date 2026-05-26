@@ -272,15 +272,12 @@ export default class DestinyTracker extends FormApplication {
     if (game.user.isGM) {
       const roll = await this._rollDestiny();
       const actorId = game.user.character?.id;
-      if (actorId) {
-        await this._setActorDestiny(actorId, roll.ffg.light, roll.ffg.dark);
-        await this._recalculateDestinyPoolFromActors();
-      } else {
-        const light = await game.settings.get("starwarsffg", "dPoolLight");
-        const dark = await game.settings.get("starwarsffg", "dPoolDark");
-        await game.settings.set("starwarsffg", "dPoolLight", light + roll.ffg.light);
-        await game.settings.set("starwarsffg", "dPoolDark", dark + roll.ffg.dark);
+      if (!actorId) {
+        ui.notifications.warn("Assign a character actor to your user before rolling destiny.");
+        return;
       }
+      await this._setActorDestiny(actorId, roll.ffg.light, roll.ffg.dark);
+      await this._recalculateDestinyPoolFromActors();
     }
   }
 

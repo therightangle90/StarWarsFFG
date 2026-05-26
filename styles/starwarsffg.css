@@ -637,7 +637,7 @@ img {
   background-color: black;
   color: white;
   text-transform: uppercase;
-  font-size: calc(10px - 1pt);
+  font-size: 8.67px;
   --notchSize: 7px;
   -webkit-clip-path: polygon(0% var(--notchSize), var(--notchSize) 0%, calc(100% - var(--notchSize)) 0%, 100% var(--notchSize), 100% calc(100% - var(--notchSize)), calc(100% - var(--notchSize)) 100%, var(--notchSize) 100%, 0% calc(100% - var(--notchSize)));
   clip-path: polygon(0% var(--notchSize), var(--notchSize) 0%, calc(100% - var(--notchSize)) 0%, 100% var(--notchSize), 100% calc(100% - var(--notchSize)), calc(100% - var(--notchSize)) 100%, var(--notchSize) 100%, 0% calc(100% - var(--notchSize)));
@@ -653,7 +653,7 @@ img {
 .starwarsffg .characteristic-item .characteristic .characteristic-value input {
   height: 40px;
   border: 0;
-  font-size: calc(30px - 1pt);
+  font-size: 28.67px;
   text-align: center;
 }
 .starwarsffg .characteristic-item .characteristic .characteristic-value input:focus {
