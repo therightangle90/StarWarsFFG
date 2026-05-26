@@ -811,6 +811,13 @@ img {
   flex-wrap: wrap;
   gap: 1px;
   min-height: 1rem;
+  width: 100%;
+}
+.starwarsffg.sheet.actor.v3 .character .v3-destiny-box .destiny-pips-field {
+  display: flex !important;
+  flex-direction: row;
+  flex-wrap: wrap;
+  width: 100%;
 }
 .starwarsffg.sheet.actor.v3 .character .v3-destiny-box .destiny-pip {
   width: 12px;

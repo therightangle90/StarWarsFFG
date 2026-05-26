@@ -178,11 +178,13 @@ export default class DestinyTracker extends FormApplication {
       if (args[0]?.canIRollDestinyResponse === game.user.id && !game.user.isGM) {
         if (!args[0]?.rolled) {
           const roll = await this._rollDestiny();
+          const actor = game.user.character;
+          const modifiers = actor ? this._getActorDestinyModifiers(actor) : { light: 0, dark: 0 };
           await game.socket.emit("system.starwarsffg", {
             destiny: game.user.id,
             actorId: game.user.character?.id,
-            light: roll.ffg.light,
-            dark: roll.ffg.dark
+            light: roll.ffg.light + modifiers.light,
+            dark: roll.ffg.dark + modifiers.dark
           });
         } else {
           ui.notifications.info(`${game.i18n.localize("SWFFG.DestinyAlreadyRolled")}`);
@@ -273,11 +275,15 @@ export default class DestinyTracker extends FormApplication {
         ui.notifications.warn("Assign a character actor to your user before rolling destiny.");
         return;
       }
-      await this._setActorDestiny(actorId, roll.ffg.light, roll.ffg.dark);
+      const actor = game.actors.get(actorId);
+      const modifiers = actor ? this._getActorDestinyModifiers(actor) : { light: 0, dark: 0 };
+      const totalLight = roll.ffg.light + modifiers.light;
+      const totalDark = roll.ffg.dark + modifiers.dark;
+      await this._setActorDestiny(actorId, totalLight, totalDark);
       const light = await game.settings.get("starwarsffg", "dPoolLight");
       const dark = await game.settings.get("starwarsffg", "dPoolDark");
-      await game.settings.set("starwarsffg", "dPoolLight", light + roll.ffg.light);
-      await game.settings.set("starwarsffg", "dPoolDark", dark + roll.ffg.dark);
+      await game.settings.set("starwarsffg", "dPoolLight", light + totalLight);
+      await game.settings.set("starwarsffg", "dPoolDark", dark + totalDark);
     }
   }
 
@@ -350,5 +356,20 @@ export default class DestinyTracker extends FormApplication {
     }
     const ownedCharacter = game.actors.find((actor) => actor.type === "character" && actor.testUserPermission(user, CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER));
     return ownedCharacter?.id;
+  }
+
+  _getActorDestinyModifiers(actor) {
+    let light = 0;
+    let dark = 0;
+    for (const item of actor.items) {
+      if (!item.system?.attributes) continue;
+      for (const attr of Object.values(item.system.attributes)) {
+        if (attr.modtype !== "Destiny Pool") continue;
+        const val = parseInt(attr.value, 10) || 0;
+        if (attr.mod === "Light") light += val;
+        else if (attr.mod === "Dark") dark += val;
+      }
+    }
+    return { light, dark };
   }
 }

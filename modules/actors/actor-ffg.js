@@ -117,6 +117,18 @@ export class ActorFFG extends Actor {
             }
           }
         );
+        // Adjust encumbrance.max by the raw brawn delta
+        const originalRawEncumbranceMax = foundry.utils.getProperty(rawActorData, "system.stats.encumbrance.max") ?? 5;
+        const updatedEncumbranceMax = originalRawEncumbranceMax + brawnDelta;
+        CONFIG.logger.debug(`Adjusting raw encumbrance.max from ${originalRawEncumbranceMax} to ${updatedEncumbranceMax} (delta ${brawnDelta})`);
+        changes.system.stats = foundry.utils.mergeObject(
+          changes.system.stats,
+          {
+            encumbrance: {
+              max: updatedEncumbranceMax,
+            }
+          }
+        );
       }
       const originalRawWillpower = foundry.utils.getProperty(rawActorData, "system.characteristics.Willpower.value") ?? 0;
       const updatedWillpower = changes.system?.characteristics?.Willpower?.value;
@@ -216,6 +228,7 @@ export class ActorFFG extends Actor {
     let woundBonus = 0;
     let strainBonus = 0;
     let soakBonus = 0;
+    let encumbranceBonus = 0;
 
     const actorActiveEffects = actorData.getEmbeddedCollection("ActiveEffect")?.contents || [];
     for (const effect of actorActiveEffects) {
@@ -236,6 +249,8 @@ export class ActorFFG extends Actor {
           strainBonus += numericValue;
         } else if (change.key === "system.stats.soak.value") {
           soakBonus += numericValue;
+        } else if (change.key === "system.stats.encumbrance.max") {
+          encumbranceBonus += numericValue;
         }
       }
     }
@@ -243,6 +258,7 @@ export class ActorFFG extends Actor {
     data.stats.wounds.max = speciesBaseWounds + brawn + woundBonus;
     data.stats.strain.max = speciesBaseStrain + willpower + strainBonus;
     data.stats.soak.value = brawn + soakBonus;
+    data.stats.encumbrance.max = 5 + brawn + encumbranceBonus;
   }
 
   _getCharacterForcePoolMax() {
