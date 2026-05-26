@@ -41,8 +41,8 @@ export class ActorSheetFFG extends ActorSheet {
     return foundry.utils.mergeObject(super.defaultOptions, {
       classes: ["starwarsffg", "sheet", "actor"],
       template: "systems/starwarsffg/templates/actors/ffg-character-sheet.html",
-      width: 710,
-      height: 650,
+      width: 800,
+      height: 980,
       submitOnClose: false,
       tabs: [{ navSelector: ".sheet-tabs", contentSelector: ".sheet-body", initial: "characteristics" }],
       scrollY: [".tableWithHeader", ".tab", ".skillsGrid", ".skillsTablesGrid"],
@@ -205,6 +205,13 @@ export class ActorSheetFFG extends ActorSheet {
     data.data.characteristics = foundry.utils.deepClone(this.actor.system.characteristics);
     data.data.stats.forcePool = foundry.utils.deepClone(this.actor.system.stats.forcePool);
     data.hasForceRating = Number(this.actor.system.stats?.forcePool?.max ?? 0) >= 1;
+    const destinyPips = this.actor.getFlag("starwarsffg", "destinyPips") ?? {};
+    const lightPips = Math.max(Number(destinyPips.light ?? 0), 0);
+    const darkPips = Math.max(Number(destinyPips.dark ?? 0), 0);
+    data.destinyPipsIcons = [
+      ...Array.from({length: lightPips}, () => "systems/starwarsffg/images/dice/starwars/lightpip.png"),
+      ...Array.from({length: darkPips}, () => "systems/starwarsffg/images/dice/starwars/darkpip.png"),
+    ];
     data.talentList = this.actor.talentList;
     data.rollData = this.actor.getRollData.bind(this.actor);
 

@@ -178,8 +178,14 @@
               <div class="block-background">
                 <div class="block-title">{{localize "SWFFG.Destiny"}}</div>
                 <div class="block-attribute">
-                  <div class="block-value block-single">
-                    <input type="text" value="" data-dtype="String" readonly />
+                  <div class="block-value block-single destiny-pips-field">
+                    <div class="destiny-pips-display">
+                      {{#each destinyPipsIcons as |pip|}}
+                        <img class="destiny-pip" src="{{pip}}" alt="Destiny Pip" />
+                      {{else}}
+                        <input type="text" value="" data-dtype="String" readonly />
+                      {{/each}}
+                    </div>
                   </div>
                 </div>
               </div>

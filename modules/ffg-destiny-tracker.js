@@ -180,7 +180,12 @@ export default class DestinyTracker extends FormApplication {
       if (args[0]?.canIRollDestinyResponse === game.user.id && !game.user.isGM) {
         if (!args[0]?.rolled) {
           const roll = await this._rollDestiny();
-          await game.socket.emit("system.starwarsffg", { destiny: game.user.id, light: roll.ffg.light, dark: roll.ffg.dark });
+          await game.socket.emit("system.starwarsffg", {
+            destiny: game.user.id,
+            actorId: game.user.character?.id,
+            light: roll.ffg.light,
+            dark: roll.ffg.dark
+          });
         } else {
           ui.notifications.error(`${game.i18n.localize("SWFFG.DestinyAlreadyRolled")}`);
         }
@@ -237,6 +242,7 @@ export default class DestinyTracker extends FormApplication {
           const request = {
             id: args[0].destiny,
             type: "destiny-roll",
+            actorId: args[0].actorId || game.users.get(args[0].destiny)?.character?.id,
             light: args[0].light,
             dark: args[0].dark,
           };
@@ -265,12 +271,16 @@ export default class DestinyTracker extends FormApplication {
 
     if (game.user.isGM) {
       const roll = await this._rollDestiny();
-
-      const light = await game.settings.get("starwarsffg", "dPoolLight");
-      const dark = await game.settings.get("starwarsffg", "dPoolDark");
-
-      await game.settings.set("starwarsffg", "dPoolLight", light + roll.ffg.light);
-      await game.settings.set("starwarsffg", "dPoolDark", dark + roll.ffg.dark);
+      const actorId = game.user.character?.id;
+      if (actorId) {
+        await this._setActorDestiny(actorId, roll.ffg.light, roll.ffg.dark);
+        await this._recalculateDestinyPoolFromActors();
+      } else {
+        const light = await game.settings.get("starwarsffg", "dPoolLight");
+        const dark = await game.settings.get("starwarsffg", "dPoolDark");
+        await game.settings.set("starwarsffg", "dPoolLight", light + roll.ffg.light);
+        await game.settings.set("starwarsffg", "dPoolDark", dark + roll.ffg.dark);
+      }
     }
   }
 
@@ -329,8 +339,8 @@ export default class DestinyTracker extends FormApplication {
       switch (request.type) {
         case "destiny-roll": {
           game.settings.set("starwarsffg", `destinyrollers${request.id}`, true);
-          await game.settings.set("starwarsffg", "dPoolLight", light + request.light);
-          await game.settings.set("starwarsffg", "dPoolDark", dark + request.dark);
+          await this._setActorDestiny(request.actorId, request.light, request.dark);
+          await this._recalculateDestinyPoolFromActors();
           break;
         }
         case "destiny-flip": {
@@ -357,5 +367,43 @@ export default class DestinyTracker extends FormApplication {
     });
 
     return roll;
+  }
+
+  _getPlayerCharacterActors() {
+    return game.actors.filter((actor) => actor.type === "character" && actor.hasPlayerOwner);
+  }
+
+  _getActorDestinyPips(actor) {
+    const destinyPips = actor.getFlag("starwarsffg", "destinyPips") ?? {};
+    return {
+      light: Math.max(Number(destinyPips.light ?? 0), 0),
+      dark: Math.max(Number(destinyPips.dark ?? 0), 0),
+    };
+  }
+
+  async _setActorDestiny(actorId, light, dark) {
+    if (!actorId) {
+      return;
+    }
+    const actor = game.actors.get(actorId);
+    if (!actor || actor.type !== "character") {
+      return;
+    }
+    await actor.setFlag("starwarsffg", "destinyPips", {
+      light: Math.max(Number(light ?? 0), 0),
+      dark: Math.max(Number(dark ?? 0), 0),
+    });
+  }
+
+  async _recalculateDestinyPoolFromActors() {
+    let totalLight = 0;
+    let totalDark = 0;
+    for (const actor of this._getPlayerCharacterActors()) {
+      const pips = this._getActorDestinyPips(actor);
+      totalLight += pips.light;
+      totalDark += pips.dark;
+    }
+    await game.settings.set("starwarsffg", "dPoolLight", totalLight);
+    await game.settings.set("starwarsffg", "dPoolDark", totalDark);
   }
 }

@@ -252,6 +252,10 @@ export class GroupManager extends FormApplication {
 
     game.settings.set("starwarsffg", "dPoolLight", 0);
     game.settings.set("starwarsffg", "dPoolDark", 0);
+    const playerCharacters = game.actors.filter((actor) => actor.type === "character" && actor.hasPlayerOwner);
+    for (const actor of playerCharacters) {
+      await actor.setFlag("starwarsffg", "destinyPips", {light: 0, dark: 0});
+    }
     if (this.form?.elements?.["dPool.light"]) {
       this.form.elements["dPool.light"].value = 0;
     }

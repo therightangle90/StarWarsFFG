@@ -637,7 +637,7 @@ img {
   background-color: black;
   color: white;
   text-transform: uppercase;
-  font-size: 10px;
+  font-size: calc(10px - 1pt);
   --notchSize: 7px;
   -webkit-clip-path: polygon(0% var(--notchSize), var(--notchSize) 0%, calc(100% - var(--notchSize)) 0%, 100% var(--notchSize), 100% calc(100% - var(--notchSize)), calc(100% - var(--notchSize)) 100%, var(--notchSize) 100%, 0% calc(100% - var(--notchSize)));
   clip-path: polygon(0% var(--notchSize), var(--notchSize) 0%, calc(100% - var(--notchSize)) 0%, 100% var(--notchSize), 100% calc(100% - var(--notchSize)), calc(100% - var(--notchSize)) 100%, var(--notchSize) 100%, 0% calc(100% - var(--notchSize)));
@@ -653,7 +653,7 @@ img {
 .starwarsffg .characteristic-item .characteristic .characteristic-value input {
   height: 40px;
   border: 0;
-  font-size: 30px;
+  font-size: calc(30px - 1pt);
   text-align: center;
 }
 .starwarsffg .characteristic-item .characteristic .characteristic-value input:focus {
@@ -802,6 +802,19 @@ img {
 .starwarsffg.sheet.actor.v3 .character .v3-destiny-box input,
 .starwarsffg.sheet.actor.v3 .character .resource.single.data\.stats\.soak\.value input {
   width: 30px;
+}
+.starwarsffg.sheet.actor.v3 .character .v3-destiny-box .destiny-pips-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 1px;
+  min-height: 1rem;
+}
+.starwarsffg.sheet.actor.v3 .character .v3-destiny-box .destiny-pip {
+  width: 12px;
+  height: 12px;
+  object-fit: contain;
 }
 .starwarsffg .tabs {
   flex: 0 0 40px;
@@ -1472,14 +1485,22 @@ img {
 }
 .starwarsffg .skillsGrid .skillTable div.skill {
   position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 2rem;
 }
 .starwarsffg .skillsGrid .skillTable div.skill > div {
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2rem;
 }
 .starwarsffg .skillsGrid .skillTable div.skill > div:first-of-type {
   text-align: left;
   padding-left: 3px;
-  padding-top: 7px;
+  padding-top: 0;
+  justify-content: flex-start;
 }
 .starwarsffg .skillsGrid .skillTable div.skill input[type=checkbox] {
   width: 20px;
@@ -1491,12 +1512,12 @@ img {
   padding: 0;
 }
 .starwarsffg .skillsGrid .skillTable .careerskill-rank {
-  margin-top: 2px;
+  margin-top: 0;
   width: 30px;
   text-align: center;
 }
 .starwarsffg .skillsGrid .dice-pool {
-  margin: 0.5em 0;
+  margin: 0;
 }
 .starwarsffg .skillsGrid .dice-pool img {
   width: 1em;
