@@ -308,7 +308,7 @@ export default class DestinyTracker extends FormApplication {
       const roll = await this._rollDestiny();
       const actorId = game.user.character?.id;
       if (!actorId) {
-        ui.notifications.warn("Assign a character actor to your user before rolling destiny.");
+        ui.notifications.warn(game.i18n.localize("SWFFG.DestinyRollAssignCharacter"));
         return;
       }
       const actor = game.actors.get(actorId);

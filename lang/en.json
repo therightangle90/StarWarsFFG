@@ -536,6 +536,7 @@
   "SWFFG.DestinyRollOwnershipDenied": "You can only roll Destiny for characters you own.",
   "SWFFG.DestinyRollActorMissing": "Selected character could not be found for Destiny roll.",
   "SWFFG.DestinyRollNoOwnedCharacters": "You do not own any characters to roll Destiny for.",
+  "SWFFG.DestinyRollAssignCharacter": "Assign a character actor to your user before rolling destiny.",
   "SWFFG.ChooseCharacterForDestinyRoll": "Choose Character for Destiny Roll",
   "SWFFG.DestinyPoolRoll": "Click here to roll for the Destiny Pool",
   "SWFFG.SkillAddAsInitiative": "Toggle for use as initiative",
