@@ -1420,6 +1420,8 @@ img {
 }
 .starwarsffg .skill-characteristic {
   display: inline;
+  margin-left: 0.2rem;
+  white-space: nowrap;
 }
 .starwarsffg .skill-characteristic-select-dialog {
   display: inline-block;
@@ -1487,14 +1489,14 @@ img {
   position: relative;
   display: flex;
   align-items: center;
-  min-height: 2rem;
+  min-height: 1.6rem;
 }
 .starwarsffg .skillsGrid .skillTable div.skill > div {
   text-align: center;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 2rem;
+  min-height: 1.6rem;
 }
 .starwarsffg .skillsGrid .skillTable div.skill > div:first-of-type {
   text-align: left;
@@ -1505,7 +1507,7 @@ img {
 .starwarsffg .skillsGrid .skillTable div.skill input[type=checkbox] {
   width: 20px;
   height: 20px;
-  margin: 2px 5px;
+  margin: 1px 5px;
 }
 .starwarsffg .skillsGrid .skillTable .careerskill-toggle {
   margin: 0;

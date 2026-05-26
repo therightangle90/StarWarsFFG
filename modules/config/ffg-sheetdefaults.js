@@ -1,5 +1,5 @@
 export const default_width = {
-  character: 800,
+  character: 700,
   minion: 595,
   vehicle: 595,
   homestead: 595,

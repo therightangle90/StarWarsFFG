@@ -167,11 +167,9 @@ export default class DestinyTracker extends FormApplication {
 
     // handle previously created roll destiny chat messages
     $(".ffg-destiny-roll").on("click", this.OnClickRollDestiny.bind(this));
-    this._hideDestinyRollMessagesForCurrentUser();
 
     // setup chat hook for destiny roll
     Hooks.on("renderChatMessage", (app, html, messageData) => {
-      this._hideDestinyRollMessageForCurrentUser(html, app.id);
       html.on("click", ".ffg-destiny-roll", this.OnClickRollDestiny.bind(this));
     });
 
@@ -264,7 +262,6 @@ export default class DestinyTracker extends FormApplication {
   async OnClickRollDestiny(event) {
     event.preventDefault();
     event.stopPropagation();
-    await this._hideClickedDestinyRollMessage(event);
     if (!game.user.isGM) {
       await game.socket.emit("system.starwarsffg", { canIRollDestiny: game.user.id });
     }
@@ -277,50 +274,11 @@ export default class DestinyTracker extends FormApplication {
         return;
       }
       await this._setActorDestiny(actorId, roll.ffg.light, roll.ffg.dark);
-      await this._recalculateDestinyPoolFromActors();
+      const light = await game.settings.get("starwarsffg", "dPoolLight");
+      const dark = await game.settings.get("starwarsffg", "dPoolDark");
+      await game.settings.set("starwarsffg", "dPoolLight", light + roll.ffg.light);
+      await game.settings.set("starwarsffg", "dPoolDark", dark + roll.ffg.dark);
     }
-  }
-
-  _getHiddenDestinyRollMessages() {
-    const hiddenMessages = game.user.getFlag("starwarsffg", "hiddenDestinyRollMessages");
-    return Array.isArray(hiddenMessages) ? hiddenMessages : [];
-  }
-
-  async _hideClickedDestinyRollMessage(event) {
-    if (game.user.isGM) {
-      return;
-    }
-    const messageElement = $(event.currentTarget).closest(".message");
-    const messageId = messageElement.data("messageId");
-    if (!messageId) {
-      return;
-    }
-    const hiddenMessages = this._getHiddenDestinyRollMessages();
-    if (!hiddenMessages.includes(messageId)) {
-      hiddenMessages.push(messageId);
-      await game.user.setFlag("starwarsffg", "hiddenDestinyRollMessages", hiddenMessages);
-    }
-    messageElement.hide();
-  }
-
-  _hideDestinyRollMessageForCurrentUser(html, messageId) {
-    if (game.user.isGM) {
-      return;
-    }
-    const hiddenMessages = this._getHiddenDestinyRollMessages();
-    if (hiddenMessages.includes(messageId)) {
-      html.hide();
-    }
-  }
-
-  _hideDestinyRollMessagesForCurrentUser() {
-    if (game.user.isGM) {
-      return;
-    }
-    const hiddenMessages = this._getHiddenDestinyRollMessages();
-    hiddenMessages.forEach((messageId) => {
-      $(`.message[data-message-id="${messageId}"]`).hide();
-    });
   }
 
   async _processDestinyRequests() {
@@ -336,8 +294,10 @@ export default class DestinyTracker extends FormApplication {
       switch (request.type) {
         case "destiny-roll": {
           game.settings.set("starwarsffg", `destinyrollers${request.id}`, true);
-          await this._setActorDestiny(request.actorId, request.light, request.dark);
-          await this._recalculateDestinyPoolFromActors();
+          const actorId = request.actorId || this._resolveCharacterActorIdForUser(request.id);
+          await this._setActorDestiny(actorId, request.light, request.dark);
+          await game.settings.set("starwarsffg", "dPoolLight", light + request.light);
+          await game.settings.set("starwarsffg", "dPoolDark", dark + request.dark);
           break;
         }
         case "destiny-flip": {
@@ -366,18 +326,6 @@ export default class DestinyTracker extends FormApplication {
     return roll;
   }
 
-  _getPlayerCharacterActors() {
-    return game.actors.filter((actor) => actor.type === "character" && actor.hasPlayerOwner);
-  }
-
-  _getActorDestinyPips(actor) {
-    const destinyPips = actor.getFlag("starwarsffg", "destinyPips") ?? {};
-    return {
-      light: Math.max(Number(destinyPips.light ?? 0), 0),
-      dark: Math.max(Number(destinyPips.dark ?? 0), 0),
-    };
-  }
-
   async _setActorDestiny(actorId, light, dark) {
     if (!actorId) {
       return;
@@ -392,15 +340,15 @@ export default class DestinyTracker extends FormApplication {
     });
   }
 
-  async _recalculateDestinyPoolFromActors() {
-    let totalLight = 0;
-    let totalDark = 0;
-    for (const actor of this._getPlayerCharacterActors()) {
-      const pips = this._getActorDestinyPips(actor);
-      totalLight += pips.light;
-      totalDark += pips.dark;
+  _resolveCharacterActorIdForUser(userId) {
+    const user = game.users.get(userId);
+    if (user?.character?.id) {
+      return user.character.id;
     }
-    await game.settings.set("starwarsffg", "dPoolLight", totalLight);
-    await game.settings.set("starwarsffg", "dPoolDark", totalDark);
+    if (!user) {
+      return null;
+    }
+    const ownedCharacter = game.actors.find((actor) => actor.type === "character" && actor.testUserPermission(user, CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER));
+    return ownedCharacter?.id;
   }
 }
