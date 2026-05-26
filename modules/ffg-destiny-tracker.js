@@ -177,14 +177,14 @@ export default class DestinyTracker extends FormApplication {
     game.socket.on("system.starwarsffg", async (...args) => {
       if (args[0]?.canIRollDestinyResponse === game.user.id && !game.user.isGM) {
         if (args[0]?.denied) {
-          ui.notifications.warn("You can only roll Destiny for characters you own.");
+          ui.notifications.warn(game.i18n.localize("SWFFG.DestinyRollOwnershipDenied"));
           return;
         }
         if (!args[0]?.rolled) {
           const actorId = args[0]?.actorId;
           const actor = actorId ? game.actors.get(actorId) : null;
           if (!actor || actor.type !== "character") {
-            ui.notifications.warn("Selected character could not be found for Destiny roll.");
+            ui.notifications.warn(game.i18n.localize("SWFFG.DestinyRollActorMissing"));
             return;
           }
           const roll = await this._rollDestiny();
@@ -196,7 +196,7 @@ export default class DestinyTracker extends FormApplication {
             dark: roll.ffg.dark + modifiers.dark
           });
         } else {
-          ui.notifications.info("The character's destiny has already been decided.");
+          ui.notifications.info(game.i18n.localize("SWFFG.CharacterDestinyAlreadyDecided"));
         }
       }
     });
@@ -426,7 +426,7 @@ export default class DestinyTracker extends FormApplication {
   async _promptOwnedCharacterForDestinyRoll() {
     const ownedCharacters = this._getOwnedCharacterActors(game.user);
     if (ownedCharacters.length === 0) {
-      ui.notifications.warn("You do not own any characters to roll Destiny for.");
+      ui.notifications.warn(game.i18n.localize("SWFFG.DestinyRollNoOwnedCharacters"));
       return null;
     }
     if (ownedCharacters.length === 1) {
@@ -436,7 +436,7 @@ export default class DestinyTracker extends FormApplication {
     const options = ownedCharacters.map((actor) => `<option value="${actor.id}">${actor.name}</option>`).join("");
     return await new Promise((resolve) => {
       new Dialog({
-        title: "Choose Character for Destiny Roll",
+        title: game.i18n.localize("SWFFG.ChooseCharacterForDestinyRoll"),
         content: `<form><div class="form-group"><label>Character:</label><select name="actorId">${options}</select></div></form>`,
         buttons: {
           roll: {

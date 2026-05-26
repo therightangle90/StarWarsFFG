@@ -532,6 +532,11 @@
   "SWFFG.InitiativePoolAddsHint": "Add Success/Advantages to Roll.  Left click to increase dice, right click to decrease.",
   "SWFFG.RequestDestinyRoll": "Request Destiny Roll",
   "SWFFG.DestinyAlreadyRolled": "Your Destiny has already been decided.",
+  "SWFFG.CharacterDestinyAlreadyDecided": "The character's destiny has already been decided.",
+  "SWFFG.DestinyRollOwnershipDenied": "You can only roll Destiny for characters you own.",
+  "SWFFG.DestinyRollActorMissing": "Selected character could not be found for Destiny roll.",
+  "SWFFG.DestinyRollNoOwnedCharacters": "You do not own any characters to roll Destiny for.",
+  "SWFFG.ChooseCharacterForDestinyRoll": "Choose Character for Destiny Roll",
   "SWFFG.DestinyPoolRoll": "Click here to roll for the Destiny Pool",
   "SWFFG.SkillAddAsInitiative": "Toggle for use as initiative",
   "SWFFG.ItemWeaponStatus" : "Status",
@@ -863,6 +868,7 @@
   "SWFFG.CriticalInjuryCompendiumNotFound": "Compendium not found",
   "SWFFG.CriticalInjuryNoMatch": "No Critical Injury found for roll",
   "SWFFG.CriticalInjuryResult": "Critical Injury Result",
+  "SWFFG.CriticalInjuryOwnershipDenied": "You cannot generate a Critical Injury for another player's character.",
   "SWFFG.Settings.CritInjuriesCompendium.Name": "Critical Injuries Compendium",
   "SWFFG.Settings.CritInjuriesCompendium.Hint": "The name of the compendium containing Critical Injury entries (e.g. world.critical-injuries)"
 }

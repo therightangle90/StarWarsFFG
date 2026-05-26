@@ -101,7 +101,7 @@ async function _rollCriticalInjury() {
     return;
   }
   if (!game.user.isGM && actor.type === "character" && !actor.testUserPermission(game.user, CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER)) {
-    ui.notifications.warn("You cannot generate a critical wound for another player's character.");
+    ui.notifications.warn(game.i18n.localize("SWFFG.CriticalInjuryOwnershipDenied"));
     return;
   }
 
