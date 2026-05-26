@@ -181,9 +181,9 @@
                   <div class="block-value block-single destiny-pips-field">
                     <div class="destiny-pips-display">
                       {{#each destinyPipsIcons as |pip|}}
-                        <img class="destiny-pip" src="{{pip}}" alt="Destiny Pip" />
+                        <img class="destiny-pip destiny-pip-{{pip.type}}" src="{{pip.src}}" alt="Destiny Pip" />
                       {{else}}
-                        <input type="text" value="" data-dtype="String" readonly />
+                        <span class="destiny-pips-placeholder" aria-hidden="true"></span>
                       {{/each}}
                     </div>
                   </div>

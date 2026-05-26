@@ -100,6 +100,10 @@ async function _rollCriticalInjury() {
     ui.notifications.info(game.i18n.localize("SWFFG.CriticalInjurySelectToken"));
     return;
   }
+  if (!game.user.isGM && actor.type === "character" && !actor.testUserPermission(game.user, CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER)) {
+    ui.notifications.warn("You cannot generate a critical wound for another player's character.");
+    return;
+  }
 
   const injuries = actor.items.filter(i => i.type === "criticalinjury");
 

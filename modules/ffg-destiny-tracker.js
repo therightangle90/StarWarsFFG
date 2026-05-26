@@ -196,8 +196,7 @@ export default class DestinyTracker extends FormApplication {
             dark: roll.ffg.dark + modifiers.dark
           });
         } else {
-          const actorName = args[0]?.actorName || "Character";
-          ui.notifications.info(`${actorName}: ${game.i18n.localize("SWFFG.DestinyAlreadyRolled")}`);
+          ui.notifications.info("The character's destiny has already been decided.");
         }
       }
     });
@@ -441,7 +440,7 @@ export default class DestinyTracker extends FormApplication {
         content: `<form><div class="form-group"><label>Character:</label><select name="actorId">${options}</select></div></form>`,
         buttons: {
           roll: {
-            label: game.i18n.localize("SWFFG.DestinyPoolRoll"),
+            label: game.i18n.localize("SWFFG.ButtonRoll"),
             callback: (html) => {
               const actorId = html.find('select[name="actorId"]').val();
               resolve(game.actors.get(actorId) || null);

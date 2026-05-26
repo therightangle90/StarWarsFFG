@@ -798,22 +798,28 @@ img {
 .starwarsffg.sheet.actor.v3 .character .resource.single.data\.stats\.soak\.value {
   width: 67px;
 }
+.starwarsffg.sheet.actor.v3 .character .v3-destiny-box .block-attribute {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 21px;
+}
 .starwarsffg.sheet.actor.v3 .character .v3-level-box input,
 .starwarsffg.sheet.actor.v3 .character .v3-destiny-box input,
 .starwarsffg.sheet.actor.v3 .character .resource.single.data\.stats\.soak\.value input {
   width: 30px;
 }
 .starwarsffg.sheet.actor.v3 .character .v3-destiny-box .destiny-pips-display {
-  display: flex;
+  display: inline-flex;
   flex-direction: row;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   flex-wrap: nowrap;
-  gap: 1px;
-  min-height: 1rem;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
+  gap: 0;
+  min-height: 21px;
+  width: auto;
+  max-width: 100%;
+  margin: 0 auto;
 }
 .starwarsffg.sheet.actor.v3 .character .v3-destiny-box .destiny-pips-field {
   display: flex !important;
@@ -822,13 +828,20 @@ img {
   align-items: center;
   justify-content: center;
   width: 100%;
-  height: 100%;
-  overflow: hidden;
+  min-height: 21px;
+  padding: 0 2px;
 }
 .starwarsffg.sheet.actor.v3 .character .v3-destiny-box .destiny-pip {
-  width: 12px;
-  height: 12px;
+  display: block;
+  flex: 0 0 auto;
+  width: 10px;
+  height: 10px;
   object-fit: contain;
+}
+.starwarsffg.sheet.actor.v3 .character .v3-destiny-box .destiny-pips-placeholder {
+  display: block;
+  width: 30px;
+  min-height: 21px;
 }
 .starwarsffg .tabs {
   flex: 0 0 40px;

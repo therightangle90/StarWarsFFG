@@ -210,8 +210,8 @@ export class ActorSheetFFG extends ActorSheet {
     const lightPips = Math.max(Number(destinyPips.light ?? 0), 0);
     const darkPips = Math.max(Number(destinyPips.dark ?? 0), 0);
     data.destinyPipsIcons = [
-      ...Array.from({length: lightPips}, () => "systems/starwarsffg/images/dice/starwars/lightpip.png"),
-      ...Array.from({length: darkPips}, () => "systems/starwarsffg/images/dice/starwars/darkpip.png"),
+      ...Array.from({length: lightPips}, () => ({ type: "light", src: CONFIG.FFG.LIGHT_ICON })),
+      ...Array.from({length: darkPips}, () => ({ type: "dark", src: CONFIG.FFG.DARK_ICON })),
     ];
     data.talentList = this.actor.talentList;
     data.rollData = this.actor.getRollData.bind(this.actor);
