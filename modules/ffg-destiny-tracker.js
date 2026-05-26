@@ -176,18 +176,28 @@ export default class DestinyTracker extends FormApplication {
     // setup socket handler for checking destiny roll
     game.socket.on("system.starwarsffg", async (...args) => {
       if (args[0]?.canIRollDestinyResponse === game.user.id && !game.user.isGM) {
+        if (args[0]?.denied) {
+          ui.notifications.warn("You can only roll Destiny for characters you own.");
+          return;
+        }
         if (!args[0]?.rolled) {
+          const actorId = args[0]?.actorId;
+          const actor = actorId ? game.actors.get(actorId) : null;
+          if (!actor || actor.type !== "character") {
+            ui.notifications.warn("Selected character could not be found for Destiny roll.");
+            return;
+          }
           const roll = await this._rollDestiny();
-          const actor = game.user.character;
           const modifiers = actor ? this._getActorDestinyModifiers(actor) : { light: 0, dark: 0 };
           await game.socket.emit("system.starwarsffg", {
             destiny: game.user.id,
-            actorId: game.user.character?.id,
+            actorId: actor.id,
             light: roll.ffg.light + modifiers.light,
             dark: roll.ffg.dark + modifiers.dark
           });
         } else {
-          ui.notifications.info(`${game.i18n.localize("SWFFG.DestinyAlreadyRolled")}`);
+          const actorName = args[0]?.actorName || "Character";
+          ui.notifications.info(`${actorName}: ${game.i18n.localize("SWFFG.DestinyAlreadyRolled")}`);
         }
       }
     });
@@ -202,12 +212,27 @@ export default class DestinyTracker extends FormApplication {
         }
         // Can user roll destiny? Or have they already rolled
         if (args[0]?.canIRollDestiny) {
+          const userId = args[0]?.canIRollDestiny;
+          const actorId = args[0]?.actorId;
+          const user = game.users.get(userId);
+          const actor = actorId ? game.actors.get(actorId) : null;
+          if (!user || !actor || actor.type !== "character" || !actor.testUserPermission(user, CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER)) {
+            await game.socket.emit("system.starwarsffg", {
+              canIRollDestinyResponse: userId,
+              actorId,
+              actorName: actor?.name || null,
+              rolled: false,
+              denied: true,
+            });
+            return;
+          }
+
           let rolled = false;
 
           try {
-            rolled = await game.settings.get("starwarsffg", `destinyrollers${args[0]?.canIRollDestiny}`);
+            rolled = await game.settings.get("starwarsffg", this._getDestinyRollSettingKey(actor.id));
           } catch (err) {
-            game.settings.register("starwarsffg", `destinyrollers${args[0].canIRollDestiny}`, {
+            game.settings.register("starwarsffg", this._getDestinyRollSettingKey(actor.id), {
               name: "DestinyRoll",
               scope: "client",
               default: false,
@@ -216,7 +241,12 @@ export default class DestinyTracker extends FormApplication {
             });
           }
 
-          await game.socket.emit("system.starwarsffg", { canIRollDestinyResponse: args[0]?.canIRollDestiny, rolled });
+          await game.socket.emit("system.starwarsffg", {
+            canIRollDestinyResponse: userId,
+            actorId: actor.id,
+            actorName: actor.name,
+            rolled,
+          });
         }
 
         // Handle user initiated destiny pool flips
@@ -239,16 +269,17 @@ export default class DestinyTracker extends FormApplication {
 
         // Handle user report for initial Destiny roll
         if (args[0]?.destiny) {
+          const rollActorId = args[0].actorId || game.users.get(args[0].destiny)?.character?.id;
           const request = {
-            id: args[0].destiny,
+            id: `${args[0].destiny}:${rollActorId}`,
             type: "destiny-roll",
-            actorId: args[0].actorId || game.users.get(args[0].destiny)?.character?.id,
+            actorId: rollActorId,
             light: args[0].light,
             dark: args[0].dark,
           };
 
           // make sure only one player destiny roll is queued.
-          if (!this.destinyQueue.find((q) => q.id === args[0].destiny) && CONFIG.FFG.DestinyGM === game.user.id) {
+          if (!this.destinyQueue.find((q) => q.id === request.id) && CONFIG.FFG.DestinyGM === game.user.id) {
             this.destinyQueue.push(request);
           }
         }
@@ -265,7 +296,11 @@ export default class DestinyTracker extends FormApplication {
     event.preventDefault();
     event.stopPropagation();
     if (!game.user.isGM) {
-      await game.socket.emit("system.starwarsffg", { canIRollDestiny: game.user.id });
+      const actor = await this._promptOwnedCharacterForDestinyRoll();
+      if (!actor) {
+        return;
+      }
+      await game.socket.emit("system.starwarsffg", { canIRollDestiny: game.user.id, actorId: actor.id });
     }
 
     if (game.user.isGM) {
@@ -299,8 +334,11 @@ export default class DestinyTracker extends FormApplication {
 
       switch (request.type) {
         case "destiny-roll": {
-          game.settings.set("starwarsffg", `destinyrollers${request.id}`, true);
           const actorId = request.actorId || this._resolveCharacterActorIdForUser(request.id);
+          if (!actorId) {
+            break;
+          }
+          game.settings.set("starwarsffg", this._getDestinyRollSettingKey(actorId), true);
           await this._setActorDestiny(actorId, request.light, request.dark);
           await game.settings.set("starwarsffg", "dPoolLight", light + request.light);
           await game.settings.set("starwarsffg", "dPoolDark", dark + request.dark);
@@ -371,5 +409,50 @@ export default class DestinyTracker extends FormApplication {
       }
     }
     return { light, dark };
+  }
+
+  _getDestinyRollSettingKey(actorId) {
+    return `destinyrollers.actor.${actorId}`;
+  }
+
+  _getOwnedCharacterActors(user) {
+    return game.actors.filter((actor) =>
+      actor.type === "character"
+      && actor.testUserPermission(user, CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER)
+    );
+  }
+
+  async _promptOwnedCharacterForDestinyRoll() {
+    const ownedCharacters = this._getOwnedCharacterActors(game.user);
+    if (ownedCharacters.length === 0) {
+      ui.notifications.warn("You do not own any characters to roll Destiny for.");
+      return null;
+    }
+    if (ownedCharacters.length === 1) {
+      return ownedCharacters[0];
+    }
+
+    const options = ownedCharacters.map((actor) => `<option value="${actor.id}">${actor.name}</option>`).join("");
+    return await new Promise((resolve) => {
+      new Dialog({
+        title: "Choose Character for Destiny Roll",
+        content: `<form><div class="form-group"><label>Character:</label><select name="actorId">${options}</select></div></form>`,
+        buttons: {
+          roll: {
+            label: game.i18n.localize("SWFFG.DestinyPoolRoll"),
+            callback: (html) => {
+              const actorId = html.find('select[name="actorId"]').val();
+              resolve(game.actors.get(actorId) || null);
+            },
+          },
+          cancel: {
+            label: game.i18n.localize("Cancel"),
+            callback: () => resolve(null),
+          },
+        },
+        default: "roll",
+        close: () => resolve(null),
+      }).render(true);
+    });
   }
 }
