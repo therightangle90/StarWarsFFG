@@ -258,6 +258,7 @@ export class ActorFFG extends Actor {
     data.stats.wounds.max = speciesBaseWounds + brawn + woundBonus;
     data.stats.strain.max = speciesBaseStrain + willpower + strainBonus;
     data.stats.soak.value = brawn + soakBonus;
+    // Encumbrance threshold base is always 5 (per FFG rules) + Brawn + any active effect bonuses
     data.stats.encumbrance.max = 5 + brawn + encumbranceBonus;
   }
 
