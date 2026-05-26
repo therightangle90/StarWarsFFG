@@ -232,13 +232,15 @@ export default class DestinyTracker extends FormApplication {
           try {
             rolled = await game.settings.get("starwarsffg", this._getDestinyRollSettingKey(actor.id));
           } catch (err) {
-            game.settings.register("starwarsffg", this._getDestinyRollSettingKey(actor.id), {
+            const settingKey = this._getDestinyRollSettingKey(actor.id);
+            game.settings.register("starwarsffg", settingKey, {
               name: "DestinyRoll",
               scope: "client",
               default: false,
               config: false,
               type: Boolean,
             });
+            rolled = await game.settings.get("starwarsffg", settingKey);
           }
 
           await game.socket.emit("system.starwarsffg", {
