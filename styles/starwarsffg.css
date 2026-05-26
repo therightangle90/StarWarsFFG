@@ -805,6 +805,7 @@ img {
 }
 .starwarsffg.sheet.actor.v3 .character .v3-destiny-box .destiny-pips-display {
   display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
   flex-wrap: wrap;

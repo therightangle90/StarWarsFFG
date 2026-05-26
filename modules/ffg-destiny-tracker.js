@@ -185,7 +185,7 @@ export default class DestinyTracker extends FormApplication {
             dark: roll.ffg.dark
           });
         } else {
-          ui.notifications.error(`${game.i18n.localize("SWFFG.DestinyAlreadyRolled")}`);
+          ui.notifications.info(`${game.i18n.localize("SWFFG.DestinyAlreadyRolled")}`);
         }
       }
     });

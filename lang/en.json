@@ -531,7 +531,7 @@
   "SWFFG.InitiativePoolSelectorHint": "Select the base skill to use for Initiative",
   "SWFFG.InitiativePoolAddsHint": "Add Success/Advantages to Roll.  Left click to increase dice, right click to decrease.",
   "SWFFG.RequestDestinyRoll": "Request Destiny Roll",
-  "SWFFG.DestinyAlreadyRolled": "You have already rolled for the Destiny Pool!",
+  "SWFFG.DestinyAlreadyRolled": "Your Destiny has already been decided.",
   "SWFFG.DestinyPoolRoll": "Click here to roll for the Destiny Pool",
   "SWFFG.SkillAddAsInitiative": "Toggle for use as initiative",
   "SWFFG.ItemWeaponStatus" : "Status",

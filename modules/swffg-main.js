@@ -174,7 +174,7 @@ async function _rollCriticalInjury() {
 
   ChatMessage.create({
     content: `<h2>${game.i18n.localize("SWFFG.CriticalInjuryResult")}</h2>
-              <p><strong>d100:</strong> ${baseRoll.total} (+${totalModifier} ${game.i18n.localize("SWFFG.CriticalInjuryModifier")}): <strong>${rollTotal}</strong></p>
+              <p>${baseRoll.total} (+${totalModifier} ${game.i18n.localize("SWFFG.CriticalInjuryModifier")}): <strong>${rollTotal}</strong></p>
               <p><strong>${match.name}</strong></p>
               ${imgHTML}
               ${match.system.description || ""}`
