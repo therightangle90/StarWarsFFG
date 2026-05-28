@@ -330,6 +330,7 @@ export class ActorSheetFFG extends ActorSheet {
 
     data.actor.items = ActorSheetFFG.sortForActorSheet(data.actor.items);
     data.disabled = !enableEditMode;
+    data.isGM = game.user.isGM;
 
     data.modTypeSelected = "all"; // TODO: should this be something else?
     data.modifierTypes = CONFIG.FFG.allowableModifierTypes;

@@ -116,7 +116,6 @@ export default class DestinyTracker extends FormApplication {
 
       if (!add && !remove) {
         if (game.settings.get("starwarsffg", pointType) == 0) {
-          ui.notifications.warn(`Cannot flip a ${typeName} point; 0 remaining.`);
           return;
         } else {
           let pool = { light: 0, dark: 0 };
