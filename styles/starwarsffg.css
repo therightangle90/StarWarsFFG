@@ -3005,13 +3005,14 @@ img {
   position: relative;
   margin: 0.25rem auto;
   width: fit-content;
+  z-index: 1;
 }
 
 .swffg-destiny-roll-container .destiny-roll-image {
-  height: 60px;
+  height: 50px;
   width: auto;
   display: block;
-  margin-top: -25px;
+  margin-top: -50px;
 }
 
 .swffg-destiny-roll-container:hover .destiny-roll-image {
@@ -3025,7 +3026,7 @@ img {
   text-shadow: 1px 2px 1px black;
   text-align: center;
   pointer-events: none;
-  margin-top: -12px;
+  margin-top: -20px;
 }
 
 .ffg-destiny-roll {
