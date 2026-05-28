@@ -35,11 +35,6 @@ export default class DestinyTracker extends FormApplication {
     let destinyPool = { light: game.settings.get("starwarsffg", "dPoolLight"), dark: game.settings.get("starwarsffg", "dPoolDark") };
     let destinyPoolLabel = { light: game.settings.get("starwarsffg", "destiny-pool-light"), dark: game.settings.get("starwarsffg", "destiny-pool-dark") };
 
-    const x = $(window).width();
-    const y = $(window).height();
-
-    this.position.left = x - 505;
-    this.position.top = y;
     //this.position.width = 150;
     //this.position.height = 105;
 
@@ -67,11 +62,6 @@ export default class DestinyTracker extends FormApplication {
 
   /** @override */
   activateListeners(html) {
-    const d = html.find("swffg-destiny-container")[0];
-    new Draggable(this, html, d, this.options.resizable);
-
-    $("#destiny-tracker").css({ bottom: "0px", right: "0px" });
-
     // future functionality to allow multiple menu items to be passed in
 
     $.expr.filters.offscreen = function (el) {
