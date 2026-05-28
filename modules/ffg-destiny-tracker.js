@@ -157,7 +157,12 @@ export default class DestinyTracker extends FormApplication {
     // handle previously created roll destiny chat messages
     $(".ffg-destiny-roll").on("click", this.OnClickRollDestiny.bind(this));
 
-    // Update destiny tracker position accounting for sidebar state
+    // Update destiny tracker position accounting for sidebar state; clean up
+    // any listeners from a previous render before registering new ones.
+    if (this._boundUpdateDestinyPosition) {
+      Hooks.off("collapseSidebar", this._boundUpdateDestinyPosition);
+      window.removeEventListener("resize", this._boundUpdateDestinyPosition);
+    }
     this._boundUpdateDestinyPosition = this._updateDestinyPosition.bind(this);
     this._boundUpdateDestinyPosition();
     Hooks.on("collapseSidebar", this._boundUpdateDestinyPosition);
