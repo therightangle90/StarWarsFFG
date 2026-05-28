@@ -442,7 +442,7 @@ export default class DestinyTracker extends FormApplication {
     return { light, dark };
   }
 
-  _updateDestinyPosition(sidebar, collapsed) {
+  _updateDestinyPosition(_sidebar, collapsed) {
     const isCollapsed = typeof collapsed === "boolean" ? collapsed : (ui.sidebar?.collapsed ?? false);
     const sidebarWidth = isCollapsed ? 25 : 300;
     const centerLeft = (window.innerWidth - sidebarWidth) / 2;
