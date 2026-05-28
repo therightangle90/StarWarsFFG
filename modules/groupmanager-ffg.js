@@ -410,10 +410,10 @@ export async function requestDestinyRoll() {
   await game.settings.set("starwarsffg", "destinyRollPending", false);
   await game.settings.set("starwarsffg", "destinyRollPending", true);
 
-  await ChatMessage.create({
-    user: game.user.id,
-    content: messageText,
-  });
+  // await ChatMessage.create({
+  //   user: game.user.id,
+  //   content: messageText,
+  // });
 }
 
 /**
