@@ -4237,10 +4237,11 @@ img {
   line-height: 5rem;
   text-shadow: 1px 2px 1px black;
   border-radius: 50%;
+  box-shadow: 0 0 0 2px black;
 }
 
 .swffg-destiny .destiny-points:hover {
-  box-shadow: inset 0 0 3rem rgba(0, 0, 0, 0.75), 0 0 1rem #ff6400;
+  box-shadow: inset 0 0 3rem rgba(0, 0, 0, 0.75), 0 0 1rem #ff6400, 0 0 0 2px black;
 }
 
 .swffg-destiny .destiny-points span {
@@ -4256,6 +4257,36 @@ img {
 
 .swffg-destiny #context-menu {
   font-size: 0.875rem;
+}
+
+.swffg-destiny-roll-container {
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  margin: 0.25rem auto;
+  width: fit-content;
+}
+
+.swffg-destiny-roll-container .destiny-roll-image {
+  width: 10vw;
+  height: auto;
+  display: block;
+}
+
+.swffg-destiny-roll-container .destiny-roll-label {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: "mason-serif", "Nodesto", "Signika", "Palatino Linotype", serif;
+  font-size: 0.9rem;
+  color: white;
+  text-shadow: 1px 2px 1px black;
+  text-align: center;
+  width: 80px;
+  pointer-events: none;
 }
 
 .ffg-destiny-roll {

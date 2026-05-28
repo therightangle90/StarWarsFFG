@@ -218,6 +218,20 @@ export default class SettingsHelpers {
       },
     });
 
+    // Track whether a destiny roll has been requested (shows roll button for players)
+    game.settings.register("starwarsffg", "destinyRollPending", {
+      name: "Destiny Roll Pending",
+      scope: "world",
+      default: false,
+      config: false,
+      type: Boolean,
+      onChange: (value) => {
+        if (!game.user.isGM) {
+          Hooks.callAll("starwarsffg.destinyRollPendingChanged", value);
+        }
+      },
+    });
+
     // Enable debug messages in console
     game.settings.register("starwarsffg", "enableDebug", {
       name: game.i18n.localize("SWFFG.EnableDebug"),
