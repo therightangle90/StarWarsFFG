@@ -157,6 +157,12 @@ export default class DestinyTracker extends FormApplication {
     // handle previously created roll destiny chat messages
     $(".ffg-destiny-roll").on("click", this.OnClickRollDestiny.bind(this));
 
+    // Update destiny tracker position accounting for sidebar state
+    this._boundUpdateDestinyPosition = this._updateDestinyPosition.bind(this);
+    this._boundUpdateDestinyPosition();
+    Hooks.on("collapseSidebar", this._boundUpdateDestinyPosition);
+    window.addEventListener("resize", this._boundUpdateDestinyPosition);
+
     // setup chat hook for destiny roll
     Hooks.on("renderChatMessage", (app, html, messageData) => {
       html.on("click", ".ffg-destiny-roll", this.OnClickRollDestiny.bind(this));
@@ -399,6 +405,17 @@ export default class DestinyTracker extends FormApplication {
       }
     }
     return { light, dark };
+  }
+
+  _updateDestinyPosition() {
+    const collapsed = ui.sidebar?.collapsed ?? false;
+    const sidebarWidth = collapsed ? 25 : 300;
+    const centerLeft = (window.innerWidth - sidebarWidth) / 2;
+    const el = document.getElementById("destiny-tracker");
+    if (el) {
+      el.style.setProperty("left", `${centerLeft}px`, "important");
+      el.style.setProperty("transform", "translateX(-50%)", "important");
+    }
   }
 
   _getDestinyRollSettingKey(actorId) {
