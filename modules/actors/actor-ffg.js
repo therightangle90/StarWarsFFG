@@ -232,11 +232,21 @@ export class ActorFFG extends Actor {
 
     const actorActiveEffects = actorData.getEmbeddedCollection("ActiveEffect")?.contents || [];
     for (const effect of actorActiveEffects) {
+      if (effect.disabled) {
+        continue;
+      }
       // Species base is handled explicitly above; avoid double-counting species effects.
       const originParts = (effect.origin || "").split(".");
       const effectItemId = originParts.length >= 4 ? originParts[3] : null;
       if (effectItemId && effectItemId === speciesId) {
         continue;
+      }
+      // Armour soak is summed directly from items below; skip armour AEs to avoid double-counting.
+      if (effectItemId) {
+        const effectItem = actorData.items.get(effectItemId);
+        if (effectItem?.type === "armour") {
+          continue;
+        }
       }
       for (const change of effect.changes) {
         const numericValue = Number(change.value);
@@ -251,6 +261,16 @@ export class ActorFFG extends Actor {
           soakBonus += numericValue;
         } else if (change.key === "system.stats.encumbrance.max") {
           encumbranceBonus += numericValue;
+        }
+      }
+    }
+
+    // Add soak from equipped armour items (using the adjusted value which includes attachment/quality bonuses).
+    for (const item of actorData.items) {
+      if (item.type === "armour" && item.system?.equippable?.equipped) {
+        const armorSoak = Number(item.system.soak?.adjusted ?? item.system.soak?.value ?? 0);
+        if (Number.isFinite(armorSoak)) {
+          soakBonus += armorSoak;
         }
       }
     }

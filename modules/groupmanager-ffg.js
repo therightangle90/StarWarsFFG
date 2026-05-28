@@ -238,37 +238,17 @@ export class GroupManager extends FormApplication {
    */
   _updateObject(event, formData) {
     const formDPool = foundry.utils.expandObject(formData).dPool || {};
-    game.settings.set("starwarsffg", "dPoolLight", formDPool.light);
-    game.settings.set("starwarsffg", "dPoolDark", formDPool.dark);
+    if (formDPool.light !== undefined) {
+      game.settings.set("starwarsffg", "dPoolLight", formDPool.light);
+    }
+    if (formDPool.dark !== undefined) {
+      game.settings.set("starwarsffg", "dPoolDark", formDPool.dark);
+    }
     return formData;
   }
 
   async _requestDestinyRoll() {
-    const messageText = `<button class="ffg-destiny-roll">${game.i18n.localize("SWFFG.DestinyPoolRoll")}</button>`;
-
-    new Map([...game.settings.settings].filter(([k, v]) => v.key.includes("destinyrollers"))).forEach((i) => {
-      game.settings.set(i.namespace, i.key, undefined);
-    });
-
-    game.settings.set("starwarsffg", "dPoolLight", 0);
-    game.settings.set("starwarsffg", "dPoolDark", 0);
-    const playerCharacters = game.actors.filter((actor) => actor.type === "character" && actor.hasPlayerOwner);
-    for (const actor of playerCharacters) {
-      await actor.setFlag("starwarsffg", "destinyPips", {light: 0, dark: 0});
-    }
-    if (this.form?.elements?.["dPool.light"]) {
-      this.form.elements["dPool.light"].value = 0;
-    }
-    if (this.form?.elements?.["dPool.dark"]) {
-      this.form.elements["dPool.dark"].value = 0;
-    }
-
-    CONFIG.FFG.DestinyGM = game.user.id;
-
-    await ChatMessage.create({
-      user: game.user.id,
-      content: messageText,
-    });
+    await requestDestinyRoll();
   }
 
   _addCharacterObligationDuty(character, rangeStart, list, type) {
@@ -402,43 +382,76 @@ export class GroupManager extends FormApplication {
   }
 
   async _bulkXP(characters) {
-    const id = foundry.utils.randomID();
-    const description = game.i18n.localize("SWFFG.GrantXPToAllCharacters");
-    const content = await renderTemplate("systems/starwarsffg/templates/grant-xp.html", {
-      id,
-    });
+    await bulkGrantXP(characters);
+  }
+}
 
-    new Dialog({
-      title: description,
-      content,
-      buttons: {
-        one: {
-          icon: '<i class="fas fa-check"></i>',
-          label: game.i18n.localize("SWFFG.GrantXP"),
-          callback: async () => {
-            const container = document.getElementById(id);
-            const amount = container.querySelector('input[name="amount"]');
-            const note = container.querySelector('input[name="note"]').value;
-            for (const c of characters) {
-              const character = game.actors.get(c);
-              const state = await ActorHelpers.beginEditMode(character, true);
-              const available = +character.system.experience.available + +amount.value;
-              const total = +character.system.experience.total + +amount.value;
-              character.update({ ["system.experience.total"]: +character.system.experience.total + +amount.value });
-              character.update({ ["system.experience.available"]: +character.system.experience.available + +amount.value });
-              await xpLogEarn(character, amount.value, available, total, note);
-              await ActorHelpers.endEditMode(character, state, true);
-              ui.notifications.info(`Granted ${amount.value} XP to ${character.name}.`);
-            }
-          },
-        },
-        two: {
-          icon: '<i class="fas fa-times"></i>',
-          label: game.i18n.localize("SWFFG.Cancel"),
+/**
+ * Standalone exported function to request a destiny roll.
+ * Resets all destiny settings and posts a chat button prompting players to roll.
+ */
+export async function requestDestinyRoll() {
+  const messageText = `<button class="ffg-destiny-roll">${game.i18n.localize("SWFFG.DestinyPoolRoll")}</button>`;
+
+  new Map([...game.settings.settings].filter(([k, v]) => v.key.includes("destinyrollers"))).forEach((i) => {
+    game.settings.set(i.namespace, i.key, undefined);
+  });
+
+  game.settings.set("starwarsffg", "dPoolLight", 0);
+  game.settings.set("starwarsffg", "dPoolDark", 0);
+  const playerCharacters = game.actors.filter((actor) => actor.type === "character" && actor.hasPlayerOwner);
+  for (const actor of playerCharacters) {
+    await actor.setFlag("starwarsffg", "destinyPips", {light: 0, dark: 0});
+  }
+
+  CONFIG.FFG.DestinyGM = game.user.id;
+
+  await ChatMessage.create({
+    user: game.user.id,
+    content: messageText,
+  });
+}
+
+/**
+ * Standalone exported function to bulk-grant XP to an array of actor IDs.
+ */
+export async function bulkGrantXP(characters) {
+  const id = foundry.utils.randomID();
+  const description = game.i18n.localize("SWFFG.GrantXPToAllCharacters");
+  const content = await renderTemplate("systems/starwarsffg/templates/grant-xp.html", {
+    id,
+  });
+
+  new Dialog({
+    title: description,
+    content,
+    buttons: {
+      one: {
+        icon: '<i class="fas fa-check"></i>',
+        label: game.i18n.localize("SWFFG.GrantXP"),
+        callback: async () => {
+          const container = document.getElementById(id);
+          const amount = container.querySelector('input[name="amount"]');
+          const note = container.querySelector('input[name="note"]').value;
+          for (const c of characters) {
+            const character = game.actors.get(c);
+            const state = await ActorHelpers.beginEditMode(character, true);
+            const available = +character.system.experience.available + +amount.value;
+            const total = +character.system.experience.total + +amount.value;
+            character.update({ ["system.experience.total"]: +character.system.experience.total + +amount.value });
+            character.update({ ["system.experience.available"]: +character.system.experience.available + +amount.value });
+            await xpLogEarn(character, amount.value, available, total, note);
+            await ActorHelpers.endEditMode(character, state, true);
+            ui.notifications.info(`Granted ${amount.value} XP to ${character.name}.`);
+          }
         },
       },
-    }).render(true);
-  }
+      two: {
+        icon: '<i class="fas fa-times"></i>',
+        label: game.i18n.localize("SWFFG.Cancel"),
+      },
+    },
+  }).render(true);
 }
 
 // Catch updates to connected players and update the group manager window if necessary.

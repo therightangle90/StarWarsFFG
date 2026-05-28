@@ -22,7 +22,7 @@ import { ActorSheetFFGV3 } from "./actors/actor-sheet-ffg-v3.js";
 import { AdversarySheetFFG } from "./actors/adversary-sheet-ffg.js";
 import { AdversarySheetFFGV2 } from "./actors/adversary-sheet-ffg-v2.js";
 import { DicePoolFFG, RollFFG } from "./dice-pool-ffg.js";
-import { GroupManager } from "./groupmanager-ffg.js";
+import { GroupManager, requestDestinyRoll, bulkGrantXP } from "./groupmanager-ffg.js";
 import PopoutEditor from "./popout-editor.js";
 
 import CharacterImporter from "./importer/character-importer.js";
@@ -77,6 +77,31 @@ Hooks.on("getSceneControlButtons", (controls) => {
     visible: game.user.isGM,
     onClick: () => {
       new GroupManager().render(true);
+    },
+  });
+
+  tokenControls.tools.push({
+    name: "request-destiny-roll",
+    title: game.i18n.localize("SWFFG.RequestDestinyRoll"),
+    icon: "fa-solid fa-compass",
+    button: true,
+    visible: game.user.isGM,
+    onClick: async () => {
+      await requestDestinyRoll();
+    },
+  });
+
+  tokenControls.tools.push({
+    name: "bulk-xp",
+    title: game.i18n.localize("SWFFG.GrantXPToAllCharacters"),
+    icon: "fas fa-folder-plus",
+    button: true,
+    visible: game.user.isGM,
+    onClick: async () => {
+      const characters = game.actors
+        .filter((a) => a.type === "character" && a.hasPlayerOwner)
+        .map((a) => a.id);
+      await bulkGrantXP(characters);
     },
   });
 
