@@ -444,8 +444,12 @@ export default class DestinyTracker extends FormApplication {
 
   _showDestinyRollButton() {
     this._rolledActorIds = new Set();
+    const ownedChars = this._getOwnedCharacterActors(game.user);
+    if (ownedChars.length === 0) return;
     const btn = document.getElementById("destinyRollButton");
     if (btn) btn.style.display = "";
+    const points = document.getElementById("destinyPoolPoints");
+    if (points) points.style.display = "none";
   }
 
   _checkAndHideRollButton() {
@@ -453,6 +457,8 @@ export default class DestinyTracker extends FormApplication {
     if (ownedChars.length > 0 && ownedChars.every((actor) => this._rolledActorIds.has(actor.id) || this._hasRolled(actor))) {
       const btn = document.getElementById("destinyRollButton");
       if (btn) btn.style.display = "none";
+      const points = document.getElementById("destinyPoolPoints");
+      if (points) points.style.display = "";
     }
   }
 
@@ -469,36 +475,13 @@ export default class DestinyTracker extends FormApplication {
   }
 
   async _promptOwnedCharacterForDestinyRoll() {
-    const ownedCharacters = this._getOwnedCharacterActors(game.user);
+    const ownedCharacters = this._getOwnedCharacterActors(game.user)
+      .sort((a, b) => a.name.localeCompare(b.name));
     if (ownedCharacters.length === 0) {
       ui.notifications.warn(game.i18n.localize("SWFFG.DestinyRollNoOwnedCharacters"));
       return null;
     }
-    if (ownedCharacters.length === 1) {
-      return ownedCharacters[0];
-    }
-
-    const options = ownedCharacters.map((actor) => `<option value="${actor.id}">${actor.name}</option>`).join("");
-    return await new Promise((resolve) => {
-      new Dialog({
-        title: game.i18n.localize("SWFFG.ChooseCharacterForDestinyRoll"),
-        content: `<form><div class="form-group"><label>Character:</label><select name="actorId">${options}</select></div></form>`,
-        buttons: {
-          roll: {
-            label: game.i18n.localize("SWFFG.ButtonRoll"),
-            callback: (html) => {
-              const actorId = html.find('select[name="actorId"]').val();
-              resolve(game.actors.get(actorId) || null);
-            },
-          },
-          cancel: {
-            label: game.i18n.localize("Cancel"),
-            callback: () => resolve(null),
-          },
-        },
-        default: "roll",
-        close: () => resolve(null),
-      }).render(true);
-    });
+    const unrolled = ownedCharacters.filter((a) => !this._hasRolled(a) && !this._rolledActorIds.has(a.id));
+    return unrolled[0] || null;
   }
 }

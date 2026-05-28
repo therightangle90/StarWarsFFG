@@ -406,6 +406,8 @@ export async function requestDestinyRoll() {
 
   CONFIG.FFG.DestinyGM = game.user.id;
 
+  AudioHelper.play({src: "systems/starwarsffg/sounds/prompt.wav", volume: 0.8}, false);
+
   // Reset then set pending to ensure onChange fires even when already true
   await game.settings.set("starwarsffg", "destinyRollPending", false);
   await game.settings.set("starwarsffg", "destinyRollPending", true);
