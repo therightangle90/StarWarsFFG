@@ -9,8 +9,8 @@
         {{item.name}}
       </div>
       <div class="item-controls">
-        {{#if isGM}}<a class="item-control item-edit" title="Edit Item"><i class="fas fa-edit"></i></a>{{/if}}
-        {{#if isGM}}<a class="item-control item-delete" title="Delete Item"><i class="fas fa-trash"></i></a>{{/if}}
+        {{#if ../isGM}}<a class="item-control item-edit" title="Edit Item"><i class="fas fa-edit"></i></a>{{/if}}
+        {{#if ../isGM}}<a class="item-control item-delete" title="Delete Item"><i class="fas fa-trash"></i></a>{{/if}}
       </div>
     </li>
     {{/iff}} {{/each}}
