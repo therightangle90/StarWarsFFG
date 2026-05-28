@@ -317,7 +317,7 @@ export default class DestinyTracker extends FormApplication {
     event.preventDefault();
     event.stopPropagation();
     if (!game.user.isGM) {
-      const actor = await this._promptOwnedCharacterForDestinyRoll();
+      const actor = await this._selectCharacterForDestinyRoll();
       if (!actor) {
         return;
       }
@@ -474,7 +474,7 @@ export default class DestinyTracker extends FormApplication {
     );
   }
 
-  async _promptOwnedCharacterForDestinyRoll() {
+  async _selectCharacterForDestinyRoll() {
     const ownedCharacters = this._getOwnedCharacterActors(game.user)
       .sort((a, b) => a.name.localeCompare(b.name));
     if (ownedCharacters.length === 0) {
