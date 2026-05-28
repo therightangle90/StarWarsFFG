@@ -406,6 +406,10 @@ export async function requestDestinyRoll() {
 
   CONFIG.FFG.DestinyGM = game.user.id;
 
+  // Reset then set pending to ensure onChange fires even when already true
+  await game.settings.set("starwarsffg", "destinyRollPending", false);
+  await game.settings.set("starwarsffg", "destinyRollPending", true);
+
   await ChatMessage.create({
     user: game.user.id,
     content: messageText,

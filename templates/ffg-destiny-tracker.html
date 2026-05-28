@@ -4,5 +4,11 @@
       <section id="destinyLight" class="destiny-points theme-{{ this.theme }}" data-value="${destinyPool.light}" data-group="dPoolLight">{{destinyPool.light}}<span>{{localize destinyPoolLabel.light }}</span></section>
       <section id="destinyDark" class="destiny-points theme-{{ this.theme }}" data-value="${destinyPool.dark}" data-group="dPoolDark">{{destinyPool.dark}}<span>{{localize destinyPoolLabel.dark }}</span></section>
     </div>
+    {{#unless isGM}}
+    <div id="destinyRollButton" class="swffg-destiny-roll-container" {{#unless showDestinyRollButton}}style="display:none;"{{/unless}}>
+      <img src="systems/starwarsffg/images/dice/starwars/destiny.png" class="destiny-roll-image" />
+      <span class="destiny-roll-label">Roll for Destiny Pool</span>
+    </div>
+    {{/unless}}
   </div>
 </form>

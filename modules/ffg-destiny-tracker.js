@@ -14,6 +14,7 @@ export default class DestinyTracker extends FormApplication {
 
     this.destinyQueue = [];
     this.isRunningQueue = false;
+    this._rolledActorIds = new Set();
     if (options?.menu) {
       this.menu = options.menu;
     }
@@ -42,6 +43,15 @@ export default class DestinyTracker extends FormApplication {
 
     const menu = (this.menu ?? []).filter((m) => game.user.hasRole(m.minimumRole) || !m.minimumRole);
 
+    let destinyRollPending = false;
+    try {
+      destinyRollPending = game.settings.get("starwarsffg", "destinyRollPending") ?? false;
+    } catch (e) {
+      // setting not yet registered; default to false
+    }
+    const ownedChars = this._getOwnedCharacterActors(game.user);
+    const showDestinyRollButton = !game.user.isGM && destinyRollPending && ownedChars.length > 0;
+
     // Return data
     return {
       destinyPool,
@@ -49,6 +59,7 @@ export default class DestinyTracker extends FormApplication {
       isGM: game.user.isGM,
       menu,
       theme: game.settings.get("starwarsffg", "dicetheme"),
+      showDestinyRollButton,
     };
   }
 
@@ -157,6 +168,9 @@ export default class DestinyTracker extends FormApplication {
     // handle previously created roll destiny chat messages
     $(".ffg-destiny-roll").on("click", this.OnClickRollDestiny.bind(this));
 
+    // click handler for the destiny roll button in the tracker
+    html.find("#destinyRollButton").on("click", this.OnClickRollDestiny.bind(this));
+
     // Update destiny tracker position accounting for sidebar state; clean up
     // any listeners from a previous render before registering new ones.
     if (this._boundUpdateDestinyPosition) {
@@ -172,6 +186,15 @@ export default class DestinyTracker extends FormApplication {
     Hooks.on("renderChatMessage", (app, html, messageData) => {
       html.on("click", ".ffg-destiny-roll", this.OnClickRollDestiny.bind(this));
     });
+
+    // re-show the destiny roll button when the GM requests a new roll
+    if (!game.user.isGM) {
+      Hooks.on("starwarsffg.destinyRollPendingChanged", (value) => {
+        if (value) {
+          this._showDestinyRollButton();
+        }
+      });
+    }
 
     // setup socket handler for checking destiny roll
     game.socket.on("system.starwarsffg", async (...args) => {
@@ -195,8 +218,15 @@ export default class DestinyTracker extends FormApplication {
             light: roll.ffg.light + modifiers.light,
             dark: roll.ffg.dark + modifiers.dark
           });
+          this._rolledActorIds.add(actor.id);
+          this._checkAndHideRollButton();
         } else {
           ui.notifications.info(game.i18n.localize("SWFFG.CharacterDestinyAlreadyDecided"));
+          const actorId = args[0]?.actorId;
+          if (actorId) {
+            this._rolledActorIds.add(actorId);
+            this._checkAndHideRollButton();
+          }
         }
       }
     });
@@ -412,14 +442,28 @@ export default class DestinyTracker extends FormApplication {
     return { light, dark };
   }
 
-  _updateDestinyPosition() {
-    const collapsed = ui.sidebar?.collapsed ?? false;
-    const sidebarWidth = collapsed ? 25 : 300;
+  _updateDestinyPosition(_sidebar, collapsed) {
+    const isCollapsed = typeof collapsed === "boolean" ? collapsed : (ui.sidebar?.collapsed ?? false);
+    const sidebarWidth = isCollapsed ? 25 : 300;
     const centerLeft = (window.innerWidth - sidebarWidth) / 2;
     const el = document.getElementById("destiny-tracker");
     if (el) {
       el.style.setProperty("left", `${centerLeft}px`, "important");
       el.style.setProperty("transform", "translateX(-50%)", "important");
+    }
+  }
+
+  _showDestinyRollButton() {
+    this._rolledActorIds = new Set();
+    const btn = document.getElementById("destinyRollButton");
+    if (btn) btn.style.display = "";
+  }
+
+  _checkAndHideRollButton() {
+    const ownedChars = this._getOwnedCharacterActors(game.user);
+    if (ownedChars.length > 0 && ownedChars.every((actor) => this._rolledActorIds.has(actor.id))) {
+      const btn = document.getElementById("destinyRollButton");
+      if (btn) btn.style.display = "none";
     }
   }
 
