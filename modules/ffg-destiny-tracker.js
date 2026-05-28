@@ -298,7 +298,9 @@ export default class DestinyTracker extends FormApplication {
           };
 
           // make sure only one player destiny roll is queued.
-          if (!this.destinyQueue.find((q) => q.id === request.id) && CONFIG.FFG.DestinyGM === game.user.id) {
+          // CONFIG.FFG.DestinyGM is in-memory and lost on page refresh, so fall back to the active GM.
+          const isDesignatedGM = !CONFIG.FFG?.DestinyGM || CONFIG.FFG.DestinyGM === game.user.id;
+          if (!this.destinyQueue.find((q) => q.id === request.id) && isDesignatedGM) {
             this.destinyQueue.push(request);
           }
         }
