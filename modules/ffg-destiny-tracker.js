@@ -50,7 +50,7 @@ export default class DestinyTracker extends FormApplication {
       // setting not yet registered; default to false
     }
     const ownedChars = this._getOwnedCharacterActors(game.user);
-    const showDestinyRollButton = !game.user.isGM && destinyRollPending && ownedChars.length > 0;
+    const showDestinyRollButton = !game.user.isGM && destinyRollPending && ownedChars.length > 0 && ownedChars.some((a) => !this._hasRolled(a));
 
     // Return data
     return {
@@ -258,19 +258,7 @@ export default class DestinyTracker extends FormApplication {
 
           let rolled = false;
 
-          try {
-            rolled = await game.settings.get("starwarsffg", this._getDestinyRollSettingKey(actor.id));
-          } catch (err) {
-            const settingKey = this._getDestinyRollSettingKey(actor.id);
-            game.settings.register("starwarsffg", settingKey, {
-              name: "DestinyRoll",
-              scope: "client",
-              default: false,
-              config: false,
-              type: Boolean,
-            });
-            rolled = await game.settings.get("starwarsffg", settingKey);
-          }
+          rolled = this._hasRolled(actor);
 
           await game.socket.emit("system.starwarsffg", {
             canIRollDestinyResponse: userId,
@@ -369,7 +357,6 @@ export default class DestinyTracker extends FormApplication {
           if (!actorId) {
             break;
           }
-          game.settings.set("starwarsffg", this._getDestinyRollSettingKey(actorId), true);
           await this._setActorDestiny(actorId, request.light, request.dark);
           await game.settings.set("starwarsffg", "dPoolLight", light + request.light);
           await game.settings.set("starwarsffg", "dPoolDark", dark + request.dark);
@@ -461,14 +448,15 @@ export default class DestinyTracker extends FormApplication {
 
   _checkAndHideRollButton() {
     const ownedChars = this._getOwnedCharacterActors(game.user);
-    if (ownedChars.length > 0 && ownedChars.every((actor) => this._rolledActorIds.has(actor.id))) {
+    if (ownedChars.length > 0 && ownedChars.every((actor) => this._rolledActorIds.has(actor.id) || this._hasRolled(actor))) {
       const btn = document.getElementById("destinyRollButton");
       if (btn) btn.style.display = "none";
     }
   }
 
-  _getDestinyRollSettingKey(actorId) {
-    return `destinyrollers.actor.${actorId}`;
+  _hasRolled(actor) {
+    const pips = actor.getFlag("starwarsffg", "destinyPips");
+    return pips != null && (pips.light > 0 || pips.dark > 0);
   }
 
   _getOwnedCharacterActors(user) {

@@ -2978,20 +2978,6 @@ img {
   pointer-events: auto;
   cursor: pointer;
   border-radius: 50%;
-  isolation: isolate;
-}
-
-.swffg-destiny .destiny-points::after {
-  content: '';
-  position: absolute;
-  width: 420px;
-  height: 420px;
-  background: black;
-  border-radius: 50%;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  z-index: -1;
 }
 .swffg-destiny .destiny-points span {
   bottom: 2px;
