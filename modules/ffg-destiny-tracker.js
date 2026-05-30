@@ -316,6 +316,15 @@ export default class DestinyTracker extends FormApplication {
   async OnClickRollDestiny(event) {
     event.preventDefault();
     event.stopPropagation();
+
+    // Immediately fade out the roll button and fade in destiny points
+    const btn = document.getElementById("destinyRollButton");
+    const points = document.getElementById("destinyPoolPoints");
+    if (btn && points) {
+      $(btn).fadeOut(500);
+      $(points).css({ display: "flex", opacity: 0 }).animate({ opacity: 1 }, 500);
+    }
+
     if (!game.user.isGM) {
       const actor = await this._selectCharacterForDestinyRoll();
       if (!actor) {
@@ -447,18 +456,18 @@ export default class DestinyTracker extends FormApplication {
     const ownedChars = this._getOwnedCharacterActors(game.user);
     if (ownedChars.length === 0) return;
     const btn = document.getElementById("destinyRollButton");
-    if (btn) btn.style.display = "";
     const points = document.getElementById("destinyPoolPoints");
-    if (points) points.style.display = "none";
+    if (points) $(points).fadeOut(500);
+    if (btn) $(btn).css({ display: "flex", opacity: 0 }).animate({ opacity: 1 }, 500);
   }
 
   _checkAndHideRollButton() {
     const ownedChars = this._getOwnedCharacterActors(game.user);
     if (ownedChars.length > 0 && ownedChars.every((actor) => this._rolledActorIds.has(actor.id) || this._hasRolled(actor))) {
       const btn = document.getElementById("destinyRollButton");
-      if (btn) btn.style.display = "none";
       const points = document.getElementById("destinyPoolPoints");
-      if (points) points.style.display = "";
+      if (btn) $(btn).fadeOut(500);
+      if (points) $(points).css({ display: "flex", opacity: 0 }).animate({ opacity: 1 }, 500);
     }
   }
 
