@@ -2881,6 +2881,9 @@ img {
   background: transparent;
   overflow: visible;
 }
+#destiny-tracker form {
+  overflow: visible;
+}
 #destiny-tracker header.window-header {
   display: none;
 }
