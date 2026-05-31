@@ -18,10 +18,11 @@ import { ItemSheetFFG } from "./items/item-sheet-ffg.js";
 import { ItemSheetFFGV2 } from "./items/item-sheet-ffg-v2.js";
 import { ActorSheetFFG } from "./actors/actor-sheet-ffg.js";
 import { ActorSheetFFGV2 } from "./actors/actor-sheet-ffg-v2.js";
+import { ActorSheetFFGV3 } from "./actors/actor-sheet-ffg-v3.js";
 import { AdversarySheetFFG } from "./actors/adversary-sheet-ffg.js";
 import { AdversarySheetFFGV2 } from "./actors/adversary-sheet-ffg-v2.js";
 import { DicePoolFFG, RollFFG } from "./dice-pool-ffg.js";
-import { GroupManager } from "./groupmanager-ffg.js";
+import { GroupManager, requestDestinyRoll, bulkGrantXP } from "./groupmanager-ffg.js";
 import PopoutEditor from "./popout-editor.js";
 
 import CharacterImporter from "./importer/character-importer.js";
@@ -62,6 +63,153 @@ async function parseSkillList() {
   }
 }
 
+Hooks.on("getSceneControlButtons", (controls) => {
+  const tokenControls = controls.find((control) => control.name === "token");
+  if (!tokenControls) {
+    return;
+  }
+
+  tokenControls.tools.push({
+    name: "group-manager",
+    title: game.i18n.localize("SWFFG.GroupManager"),
+    icon: "fas fa-users",
+    button: true,
+    visible: game.user.isGM,
+    onClick: () => {
+      new GroupManager().render(true);
+    },
+  });
+
+  tokenControls.tools.push({
+    name: "request-destiny-roll",
+    title: game.i18n.localize("SWFFG.RequestDestinyRoll"),
+    icon: "fa-solid fa-compass",
+    button: true,
+    visible: game.user.isGM,
+    onClick: async () => {
+      await requestDestinyRoll();
+    },
+  });
+
+  tokenControls.tools.push({
+    name: "bulk-xp",
+    title: game.i18n.localize("SWFFG.GrantXPToAllCharacters"),
+    icon: "fas fa-folder-plus",
+    button: true,
+    visible: game.user.isGM,
+    onClick: async () => {
+      const characters = game.actors
+        .filter((a) => a.type === "character" && a.hasPlayerOwner)
+        .map((a) => a.id);
+      await bulkGrantXP(characters);
+    },
+  });
+
+  tokenControls.tools.push({
+    name: "critical-injury",
+    title: game.i18n.localize("SWFFG.CriticalInjury"),
+    icon: "fas fa-droplet",
+    button: true,
+    visible: true,
+    onClick: () => {
+      _rollCriticalInjury();
+    },
+  });
+});
+
+async function _rollCriticalInjury() {
+  const compendiumName = game.settings.get("starwarsffg", "critInjuriesCompendium") || "world.criticalinjuries";
+
+  const actor = canvas.tokens.controlled[0]?.actor;
+  if (!actor) {
+    ui.notifications.info(game.i18n.localize("SWFFG.CriticalInjurySelectToken"));
+    return;
+  }
+  if (!game.user.isGM && actor.type === "character" && !actor.testUserPermission(game.user, CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER)) {
+    ui.notifications.warn(game.i18n.localize("SWFFG.CriticalInjuryOwnershipDenied"));
+    return;
+  }
+
+  const injuries = actor.items.filter(i => i.type === "criticalinjury");
+
+  const deadInjury = injuries.find(i => i.name === "Dead");
+  if (deadInjury) {
+    ui.notifications.info(`${actor.name} ${game.i18n.localize("SWFFG.CriticalInjuryIsDead")}`);
+    return;
+  }
+
+  const manualModifier = await new Promise((resolve) => {
+    new Dialog({
+      title: game.i18n.localize("SWFFG.CriticalInjuryModifierTitle"),
+      content: `<p>${game.i18n.localize("SWFFG.CriticalInjuryModifierPrompt")}</p><input type="number" id="manualMod" value="0" />`,
+      buttons: {
+        ok: {
+          label: game.i18n.localize("SWFFG.ButtonRoll"),
+          callback: (html) => {
+            const val = parseInt(html.find("#manualMod").val()) || 0;
+            resolve(val);
+          }
+        },
+        cancel: {
+          label: game.i18n.localize("SWFFG.Cancel"),
+          callback: () => resolve(null)
+        }
+      },
+      default: "ok",
+      render: (html) => {
+        const input = html.find("#manualMod")[0];
+        setTimeout(() => {
+          input.focus();
+          input.select();
+        }, 50);
+      }
+    }).render(true);
+  });
+
+  if (manualModifier === null) {
+    return;
+  }
+
+  const critCount = injuries.length;
+  const totalModifier = critCount * 10 + manualModifier;
+
+  const baseRoll = await new Roll("1d100").evaluate({async: true});
+  const rollTotal = baseRoll.total + totalModifier;
+
+  await baseRoll.toMessage({flavor: game.i18n.localize("SWFFG.CriticalInjuryRolling")});
+
+  const pack = game.packs.get(compendiumName);
+  if (!pack) {
+    ui.notifications.error(`${game.i18n.localize("SWFFG.CriticalInjuryCompendiumNotFound")}: '${compendiumName}'`);
+    return;
+  }
+  const entries = await pack.getDocuments();
+
+  const match = entries.find(entry => {
+    const min = entry.system.min ?? 0;
+    const max = entry.system.max ?? 0;
+    return rollTotal >= min && rollTotal <= max;
+  });
+
+  if (!match) {
+    ui.notifications.error(`${game.i18n.localize("SWFFG.CriticalInjuryNoMatch")}: ${rollTotal}`);
+    return;
+  }
+
+  const imgSrc = match.img || "";
+  const imgHTML = imgSrc ? `<p style="text-align:center;"><img src="${match.img}" style="max-width:75px; height:auto;" /></p>` : "";
+
+  await actor.createEmbeddedDocuments("Item", [match.toObject()]);
+
+  ChatMessage.create({
+    content: `<h2>${game.i18n.localize("SWFFG.CriticalInjuryResult")}</h2>
+              <p>${baseRoll.total} (+${totalModifier} ${game.i18n.localize("SWFFG.CriticalInjuryModifier")}): <strong>${rollTotal}</strong></p>
+              <p><strong>${match.name}</strong></p>
+              ${imgHTML}
+              ${match.system.description || ""}`
+  });
+}
+
 Hooks.on("setup", function (){
   // add dice symbol rendering to the text editor for journal pages
   register_roll_tag_enricher();
@@ -95,6 +243,7 @@ Hooks.once("init", async function () {
   // to instead use our extended version.
   CONFIG.Actor.documentClass = ActorFFG;
   CONFIG.Item.documentClass = ItemFFG;
+  CONFIG.Item.typeLabels.moralitythreshold = "TYPES.Item.moralitythreshold";
   CONFIG.Combat.documentClass = CombatFFG;
   CONFIG.Combatant.documentClass = CombatantFFG;
 
@@ -341,6 +490,14 @@ Hooks.once("init", async function () {
     scope: "world",
     config: false,
     default: "",
+    type: String,
+  });
+  game.settings.register("starwarsffg", "critInjuriesCompendium", {
+    name: game.i18n.localize("SWFFG.Settings.CritInjuriesCompendium.Name"),
+    hint: game.i18n.localize("SWFFG.Settings.CritInjuriesCompendium.Hint"),
+    scope: "world",
+    config: true,
+    default: "world.criticalinjuries",
     type: String,
   });
   game.settings.register("starwarsffg", "useDefense", {
@@ -699,7 +856,8 @@ Hooks.once("init", async function () {
 
   // Register sheet application classes
   Actors.unregisterSheet("core", ActorSheet);
-  Actors.registerSheet("ffg", ActorSheetFFGV2, { makeDefault: true, label: "Actor Sheet v2" });
+  Actors.registerSheet("ffg", ActorSheetFFGV2, { label: "Actor Sheet v2" });
+  Actors.registerSheet("ffg", ActorSheetFFGV3, { types: ["character"], makeDefault: true, label: "Actor Sheet v3" });
   Actors.registerSheet("ffg", AdversarySheetFFGV2, { types: ["character"], label: "Adversary Sheet v2" });
   Items.unregisterSheet("core", ItemSheet);
   Items.registerSheet("ffg", ItemSheetFFGV2, { makeDefault: true, label: "Item Sheet v2" });
@@ -1234,6 +1392,14 @@ Hooks.once("ready", async () => {
     if (item.isEmbedded && item.parent.documentName === "Actor") {
       const actor = item.actor
       if (item.type === "species" && actor.type === "character") {
+        // Ensure the species has its inherent Active Effect (may be missing if imported or created externally)
+        const existingEffects = item.getEmbeddedCollection("ActiveEffect");
+        const inherentEffect = existingEffects.find(e => e.name === "(inherent)");
+        if (!inherentEffect) {
+          CONFIG.logger.debug(`Species "${item.name}" is missing (inherent) AE on embed; creating it now`);
+          await item._onCreateAEs(options, true);
+        }
+
         const toAdd = [];
         // talents
         for(const talentId of Object.keys(item.system.talents)) {
@@ -1272,7 +1438,7 @@ Hooks.once("ready", async () => {
   });
   // data for _onDropItemCreate has system.encumbrance.adjusted = 0, despite it being proper in the item itself
   Hooks.on("deleteItem", (item, options, userId) => {
-    // remove talents added by species
+    // remove talents and abilities added by species
     if (item.isEmbedded && item.parent.documentName === "Actor") {
       const actor = item.actor
       if (item.type === "species" && actor.type === "character") {
@@ -1284,6 +1450,9 @@ Hooks.once("ready", async () => {
             toDelete.push(actorTalent.id);
           }
         }
+        // also remove abilities granted by this species (marked with fromSpecies flag)
+        const speciesAbilities = actor.items.filter(i => i.type === "ability" && i.flags?.starwarsffg?.fromSpecies);
+        speciesAbilities.forEach(ability => toDelete.push(ability.id));
         if (toDelete.length > 0) {
           actor.deleteEmbeddedDocuments("Item", toDelete);
         }
@@ -1294,37 +1463,7 @@ Hooks.once("ready", async () => {
   // Display Destiny Pool
   let destinyPool = { light: game.settings.get("starwarsffg", "dPoolLight"), dark: game.settings.get("starwarsffg", "dPoolDark") };
 
-  // future functionality to allow multiple menu items to be passed to destiny pool
-  const defaultDestinyMenu = [
-    {
-      name: game.i18n.localize("SWFFG.GroupManager"),
-      icon: '<i class="fas fa-users"></i>',
-      callback: () => {
-        new GroupManager().render(true);
-      },
-      minimumRole: CONST.USER_ROLES.GAMEMASTER,
-    },
-    {
-      name: game.i18n.localize("SWFFG.RequestDestinyRoll"),
-      icon: '<i class="fas fa-dice-d20"></i>',
-      callback: (li) => {
-        const messageText = `<button class="ffg-destiny-roll">${game.i18n.localize("SWFFG.DestinyPoolRoll")}</button>`;
-
-        new Map([...game.settings.settings].filter(([k, v]) => v.key.includes("destinyrollers"))).forEach((i) => {
-          game.settings.set(i.namespace, i.key, undefined);
-        });
-
-        CONFIG.FFG.DestinyGM = game.user.id;
-
-        ChatMessage.create({
-          user: game.user.id,
-          content: messageText,
-        });
-      },
-      minimumRole: CONST.USER_ROLES.GAMEMASTER,
-    },
-  ];
-  const dTracker = new DestinyTracker(undefined, { menu: defaultDestinyMenu });
+  const dTracker = new DestinyTracker();
 
   dTracker.render(true);
 

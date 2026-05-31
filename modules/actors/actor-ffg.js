@@ -84,18 +84,19 @@ export class ActorFFG extends Actor {
 
     CONFIG.logger.debug(`Performing pre-update on ${this.name}`);
     if (["character", "rival", "nemesis"].includes(this.type)) {
-      const originalBrawn = this.system.characteristics.Brawn.value;
+      const rawActorData = this.toObject();
+      const originalRawBrawn = foundry.utils.getProperty(rawActorData, "system.characteristics.Brawn.value") ?? 0;
       const updatedBrawn = changes?.system?.characteristics?.Brawn?.value;
-      if (originalBrawn !== undefined && updatedBrawn !== undefined && originalBrawn !== updatedBrawn) {
-        CONFIG.logger.debug(`Detected modified Brawn (${originalBrawn} -> ${updatedBrawn}, updating derived values`);
-        // get the wounds without brawn modifying it, then add the new brawn value in
-        const originalWounds = this.system.stats?.wounds.max;
-        const originalWoundsWithoutBrawn = originalWounds - originalBrawn;
-        const updatedWounds = originalWoundsWithoutBrawn + updatedBrawn;
+      if (updatedBrawn !== undefined && originalRawBrawn !== updatedBrawn) {
+        const brawnDelta = updatedBrawn - originalRawBrawn;
+        CONFIG.logger.debug(`Detected modified Brawn (raw ${originalRawBrawn} -> ${updatedBrawn}, delta ${brawnDelta}), updating derived values`);
         if (!Object.keys(changes.system).includes("stats")) {
           changes.system.stats = {};
         }
-        CONFIG.logger.debug(`The character sheet showed ${originalWounds} wounds, while that value without Brawn was ${originalWoundsWithoutBrawn}. Updating to be ${updatedWounds}`);
+        // Adjust wounds by the raw brawn delta
+        const originalRawWounds = foundry.utils.getProperty(rawActorData, "system.stats.wounds.max") ?? 0;
+        const updatedWounds = originalRawWounds + brawnDelta;
+        CONFIG.logger.debug(`Adjusting raw wounds.max from ${originalRawWounds} to ${updatedWounds} (delta ${brawnDelta})`);
         changes.system.stats = foundry.utils.mergeObject(
           changes.system.stats,
           {
@@ -104,11 +105,10 @@ export class ActorFFG extends Actor {
             }
           }
         );
-        // repeat the above process, but for soak
-        const originalSoak = this.system.stats?.soak.value;
-        const originalSoakWithoutBrawn = originalSoak - originalBrawn;
-        const updatedSoak = originalSoakWithoutBrawn + updatedBrawn;
-        CONFIG.logger.debug(`The character sheet showed ${originalSoak} soak, while that value without Brawn was ${originalSoakWithoutBrawn}. Updating to be ${updatedSoak}`);
+        // Adjust soak by the raw brawn delta
+        const originalRawSoak = foundry.utils.getProperty(rawActorData, "system.stats.soak.value") ?? 0;
+        const updatedSoak = originalRawSoak + brawnDelta;
+        CONFIG.logger.debug(`Adjusting raw soak.value from ${originalRawSoak} to ${updatedSoak} (delta ${brawnDelta})`);
         changes.system.stats = foundry.utils.mergeObject(
           changes.system.stats,
           {
@@ -117,17 +117,31 @@ export class ActorFFG extends Actor {
             }
           }
         );
+        // Adjust encumbrance.max by the raw brawn delta
+        const originalRawEncumbranceMax = foundry.utils.getProperty(rawActorData, "system.stats.encumbrance.max") ?? 5;
+        const updatedEncumbranceMax = originalRawEncumbranceMax + brawnDelta;
+        CONFIG.logger.debug(`Adjusting raw encumbrance.max from ${originalRawEncumbranceMax} to ${updatedEncumbranceMax} (delta ${brawnDelta})`);
+        changes.system.stats = foundry.utils.mergeObject(
+          changes.system.stats,
+          {
+            encumbrance: {
+              max: updatedEncumbranceMax,
+            }
+          }
+        );
       }
-      const originalWillpower = this.system.characteristics.Willpower.value;
+      const originalRawWillpower = foundry.utils.getProperty(rawActorData, "system.characteristics.Willpower.value") ?? 0;
       const updatedWillpower = changes.system?.characteristics?.Willpower?.value;
-      if (originalWillpower !== undefined && updatedWillpower !== undefined && originalWillpower !== updatedWillpower) {
-        CONFIG.logger.debug(`Detected modified Willpower (${originalWillpower} -> ${updatedWillpower}, updating derived values`);
+      if (updatedWillpower !== undefined && originalRawWillpower !== updatedWillpower) {
+        const willpowerDelta = updatedWillpower - originalRawWillpower;
+        CONFIG.logger.debug(`Detected modified Willpower (raw ${originalRawWillpower} -> ${updatedWillpower}, delta ${willpowerDelta}), updating derived values`);
         if (this.system.stats?.strain) {
-          // get the soak without willpower modifying it, then add the new willpower value in
-          const originalStrain = this.system.stats?.strain.max;
-          const originalStrainWithoutWillpower = originalStrain - originalWillpower;
-          const updatedStrain = originalStrainWithoutWillpower + updatedWillpower;
-          CONFIG.logger.debug(`The character sheet showed ${originalStrain} strain, while that value without Willpower was ${originalStrainWithoutWillpower}. Updating to be ${updatedStrain}`);
+          if (!Object.keys(changes.system).includes("stats")) {
+            changes.system.stats = {};
+          }
+          const originalRawStrain = foundry.utils.getProperty(rawActorData, "system.stats.strain.max") ?? 0;
+          const updatedStrain = originalRawStrain + willpowerDelta;
+          CONFIG.logger.debug(`Adjusting raw strain.max from ${originalRawStrain} to ${updatedStrain} (delta ${willpowerDelta})`);
           changes.system.stats = foundry.utils.mergeObject(
             changes.system.stats,
             {
@@ -173,6 +187,11 @@ export class ActorFFG extends Actor {
       });
     }
 
+    if (actor.type === "character") {
+      this._recalculateCharacterDerivedThresholds(actor);
+      this._recalculateCharacterForcePool(actor);
+    }
+
     // add values for above threshold
     if (["character", "nemesis"].includes(actor.type)) {
       data.stats.woundsOverThreshold = data.stats.wounds.value - data.stats.wounds.max;
@@ -191,6 +210,100 @@ export class ActorFFG extends Actor {
       this._prepareCharacterData(actor);
       this._prepareSources(actor);
     }
+  }
+
+  _recalculateCharacterDerivedThresholds(actorData) {
+    const data = actorData.system;
+    const species = actorData.items.find(i => i.type === "species");
+    if (!species) {
+      return;
+    }
+    const speciesId = species.id;
+
+    const speciesBaseWounds = Number(species.system?.attributes?.Wounds?.value ?? 0) || 0;
+    const speciesBaseStrain = Number(species.system?.attributes?.Strain?.value ?? 0) || 0;
+    const brawn = Number(data.characteristics?.Brawn?.value ?? 0) || 0;
+    const willpower = Number(data.characteristics?.Willpower?.value ?? 0) || 0;
+
+    let woundBonus = 0;
+    let strainBonus = 0;
+    let soakBonus = 0;
+    let encumbranceBonus = 0;
+
+    const actorActiveEffects = actorData.getEmbeddedCollection("ActiveEffect")?.contents || [];
+    for (const effect of actorActiveEffects) {
+      if (effect.disabled) {
+        continue;
+      }
+      // Species base is handled explicitly above; avoid double-counting species effects.
+      const originParts = (effect.origin || "").split(".");
+      const effectItemId = originParts.length >= 4 ? originParts[3] : null;
+      if (effectItemId && effectItemId === speciesId) {
+        continue;
+      }
+      // Armour soak is summed directly from items below; skip armour AEs to avoid double-counting.
+      if (effectItemId) {
+        const effectItem = actorData.items.get(effectItemId);
+        if (effectItem?.type === "armour") {
+          continue;
+        }
+      }
+      for (const change of effect.changes) {
+        const numericValue = Number(change.value);
+        if (!Number.isFinite(numericValue)) {
+          continue;
+        }
+        if (change.key === "system.stats.wounds.max") {
+          woundBonus += numericValue;
+        } else if (change.key === "system.stats.strain.max") {
+          strainBonus += numericValue;
+        } else if (change.key === "system.stats.soak.value") {
+          soakBonus += numericValue;
+        } else if (change.key === "system.stats.encumbrance.max") {
+          encumbranceBonus += numericValue;
+        }
+      }
+    }
+
+    // Add soak from equipped armour items (using the adjusted value which includes attachment/quality bonuses).
+    for (const item of actorData.items) {
+      if (item.type === "armour" && item.system?.equippable?.equipped) {
+        const armorSoak = Number(item.system.soak?.adjusted ?? item.system.soak?.value ?? 0);
+        if (Number.isFinite(armorSoak)) {
+          soakBonus += armorSoak;
+        }
+      }
+    }
+
+    data.stats.wounds.max = speciesBaseWounds + brawn + woundBonus;
+    data.stats.strain.max = speciesBaseStrain + willpower + strainBonus;
+    data.stats.soak.value = brawn + soakBonus;
+    // Encumbrance threshold base is always 5 (per FFG rules) + Brawn + any active effect bonuses
+    data.stats.encumbrance.max = 5 + brawn + encumbranceBonus;
+  }
+
+  _getCharacterForcePoolMax() {
+    let maxForceRating = 0;
+    for (const effect of this.allApplicableEffects()) {
+      for (const change of effect.changes) {
+        if (change.key !== "system.stats.forcePool.max") {
+          continue;
+        }
+        const changeValue = Number(change.value);
+        if (Number.isFinite(changeValue)) {
+          maxForceRating += changeValue;
+        }
+      }
+    }
+    return Math.max(maxForceRating, 0);
+  }
+
+  _recalculateCharacterForcePool(actorData) {
+    const data = actorData.system;
+    const maxForceRating = this._getCharacterForcePoolMax();
+    const committedForce = Number(data.stats?.forcePool?.value ?? 0);
+    data.stats.forcePool.max = maxForceRating;
+    data.stats.forcePool.value = Math.min(Math.max(committedForce, 0), maxForceRating);
   }
 
   _prepareSharedData(actorData) {
@@ -653,20 +766,15 @@ export class ActorFFG extends Actor {
 
   /** @override **/
   applyActiveEffects() {
-    // collect force pool modifications since it appears the stat value is without AEs active
-    let maxForceRating = parseInt(this.system?.stats?.forcePool?.max);
-    for (const effect of this.allApplicableEffects()) {
-      for (const change of effect.changes) {
-        if (change.key === "system.stats.forcePool.max") {
-          maxForceRating += parseInt(change.value);
-        }
-      }
-    }
+    const maxForceRating = this.type === "character"
+      ? this._getCharacterForcePoolMax()
+      : Number(this.system?.stats?.forcePool?.max ?? 0);
+    const committedForce = Number(this.system?.stats?.forcePool?.value ?? 0);
     // apply the resulting value (minus any committed dice)
     for (const effect of this.allApplicableEffects()) {
       for (const change of effect.changes) {
         if (change.key.includes("system.skills") && change.key.includes(".force")) {
-          change.value = Math.max(maxForceRating - parseInt(this.system?.stats?.forcePool?.value), 0);
+          change.value = Math.max(maxForceRating - committedForce, 0);
         }
       }
     }

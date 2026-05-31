@@ -554,6 +554,7 @@
   "TYPES.Item.homesteadupgrade": "Homestead Upgrade (Translate)",
   "TYPES.Item.itemattachment": "Amélioration d'équipement",
   "TYPES.Item.itemmodifier": "Modificateur d'équipement",
+  "TYPES.Item.moralitythreshold": "Seuil de Moralité",
   "TYPES.Item.talent": "Talent",
   "TYPES.Item.shipattachment": "Kit de vaisseau",
   "TYPES.Item.shipweapon": "Arme de vaisseau",

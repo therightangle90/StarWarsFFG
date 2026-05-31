@@ -14,6 +14,7 @@ export default class DestinyTracker extends FormApplication {
 
     this.destinyQueue = [];
     this.isRunningQueue = false;
+    this._rolledActorIds = new Set();
     if (options?.menu) {
       this.menu = options.menu;
     }
@@ -35,17 +36,21 @@ export default class DestinyTracker extends FormApplication {
     let destinyPool = { light: game.settings.get("starwarsffg", "dPoolLight"), dark: game.settings.get("starwarsffg", "dPoolDark") };
     let destinyPoolLabel = { light: game.settings.get("starwarsffg", "destiny-pool-light"), dark: game.settings.get("starwarsffg", "destiny-pool-dark") };
 
-    const x = $(window).width();
-    const y = $(window).height();
-
-    this.position.left = x - 505;
-    this.position.top = y;
     //this.position.width = 150;
     //this.position.height = 105;
 
     // filter menu based on role.
 
-    const menu = this.menu.filter((m) => game.user.hasRole(m.minimumRole) || !m.minimumRole);
+    const menu = (this.menu ?? []).filter((m) => game.user.hasRole(m.minimumRole) || !m.minimumRole);
+
+    let destinyRollPending = false;
+    try {
+      destinyRollPending = game.settings.get("starwarsffg", "destinyRollPending") ?? false;
+    } catch (e) {
+      // setting not yet registered; default to false
+    }
+    const ownedChars = this._getOwnedCharacterActors(game.user);
+    const showDestinyRollButton = !game.user.isGM && destinyRollPending && ownedChars.length > 0 && ownedChars.some((a) => !this._hasRolled(a));
 
     // Return data
     return {
@@ -54,6 +59,7 @@ export default class DestinyTracker extends FormApplication {
       isGM: game.user.isGM,
       menu,
       theme: game.settings.get("starwarsffg", "dicetheme"),
+      showDestinyRollButton,
     };
   }
 
@@ -67,11 +73,6 @@ export default class DestinyTracker extends FormApplication {
 
   /** @override */
   activateListeners(html) {
-    const d = html.find("swffg-destiny-container")[0];
-    new Draggable(this, html, d, this.options.resizable);
-
-    $("#destiny-tracker").css({ bottom: "0px", right: "305px" });
-
     // future functionality to allow multiple menu items to be passed in
 
     $.expr.filters.offscreen = function (el) {
@@ -116,7 +117,6 @@ export default class DestinyTracker extends FormApplication {
 
       if (!add && !remove) {
         if (game.settings.get("starwarsffg", pointType) == 0) {
-          ui.notifications.warn(`Cannot flip a ${typeName} point; 0 remaining.`);
           return;
         } else {
           let pool = { light: 0, dark: 0 };
@@ -168,19 +168,65 @@ export default class DestinyTracker extends FormApplication {
     // handle previously created roll destiny chat messages
     $(".ffg-destiny-roll").on("click", this.OnClickRollDestiny.bind(this));
 
+    // click handler for the destiny roll button in the tracker
+    html.find("#destinyRollButton").on("click", this.OnClickRollDestiny.bind(this));
+
+    // Update destiny tracker position accounting for sidebar state; clean up
+    // any listeners from a previous render before registering new ones.
+    if (this._boundUpdateDestinyPosition) {
+      Hooks.off("collapseSidebar", this._boundUpdateDestinyPosition);
+      window.removeEventListener("resize", this._boundUpdateDestinyPosition);
+    }
+    this._boundUpdateDestinyPosition = this._updateDestinyPosition.bind(this);
+    this._boundUpdateDestinyPosition();
+    Hooks.on("collapseSidebar", this._boundUpdateDestinyPosition);
+    window.addEventListener("resize", this._boundUpdateDestinyPosition);
+
     // setup chat hook for destiny roll
     Hooks.on("renderChatMessage", (app, html, messageData) => {
       html.on("click", ".ffg-destiny-roll", this.OnClickRollDestiny.bind(this));
     });
 
+    // re-show the destiny roll button when the GM requests a new roll
+    if (!game.user.isGM) {
+      Hooks.on("starwarsffg.destinyRollPendingChanged", (value) => {
+        if (value) {
+          this._showDestinyRollButton();
+        }
+      });
+    }
+
     // setup socket handler for checking destiny roll
     game.socket.on("system.starwarsffg", async (...args) => {
       if (args[0]?.canIRollDestinyResponse === game.user.id && !game.user.isGM) {
+        if (args[0]?.denied) {
+          ui.notifications.warn(game.i18n.localize("SWFFG.DestinyRollOwnershipDenied"));
+          return;
+        }
         if (!args[0]?.rolled) {
+          const actorId = args[0]?.actorId;
+          const actor = actorId ? game.actors.get(actorId) : null;
+          if (!actor || actor.type !== "character") {
+            ui.notifications.warn(game.i18n.localize("SWFFG.DestinyRollActorMissing"));
+            return;
+          }
           const roll = await this._rollDestiny();
-          await game.socket.emit("system.starwarsffg", { destiny: game.user.id, light: roll.ffg.light, dark: roll.ffg.dark });
+          const modifiers = actor ? this._getActorDestinyModifiers(actor) : { light: 0, dark: 0 };
+          await game.socket.emit("system.starwarsffg", {
+            destiny: game.user.id,
+            actorId: actor.id,
+            light: roll.ffg.light + modifiers.light,
+            dark: roll.ffg.dark + modifiers.dark
+          });
+          this._rolledActorIds.add(actor.id);
+          this._checkAndHideRollButton();
         } else {
-          ui.notifications.error(`${game.i18n.localize("SWFFG.DestinyAlreadyRolled")}`);
+          ui.notifications.info(game.i18n.localize("SWFFG.CharacterDestinyAlreadyDecided"));
+          const actorId = args[0]?.actorId;
+          if (actorId) {
+            this._rolledActorIds.add(actorId);
+            this._checkAndHideRollButton();
+          }
         }
       }
     });
@@ -195,21 +241,31 @@ export default class DestinyTracker extends FormApplication {
         }
         // Can user roll destiny? Or have they already rolled
         if (args[0]?.canIRollDestiny) {
-          let rolled = false;
-
-          try {
-            rolled = await game.settings.get("starwarsffg", `destinyrollers${args[0]?.canIRollDestiny}`);
-          } catch (err) {
-            game.settings.register("starwarsffg", `destinyrollers${args[0].canIRollDestiny}`, {
-              name: "DestinyRoll",
-              scope: "client",
-              default: false,
-              config: false,
-              type: Boolean,
+          const userId = args[0]?.canIRollDestiny;
+          const actorId = args[0]?.actorId;
+          const user = game.users.get(userId);
+          const actor = actorId ? game.actors.get(actorId) : null;
+          if (!user || !actor || actor.type !== "character" || !actor.testUserPermission(user, CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER)) {
+            await game.socket.emit("system.starwarsffg", {
+              canIRollDestinyResponse: userId,
+              actorId,
+              actorName: actor?.name || null,
+              rolled: false,
+              denied: true,
             });
+            return;
           }
 
-          await game.socket.emit("system.starwarsffg", { canIRollDestinyResponse: args[0]?.canIRollDestiny, rolled });
+          let rolled = false;
+
+          rolled = this._hasRolled(actor);
+
+          await game.socket.emit("system.starwarsffg", {
+            canIRollDestinyResponse: userId,
+            actorId: actor.id,
+            actorName: actor.name,
+            rolled,
+          });
         }
 
         // Handle user initiated destiny pool flips
@@ -232,15 +288,19 @@ export default class DestinyTracker extends FormApplication {
 
         // Handle user report for initial Destiny roll
         if (args[0]?.destiny) {
+          const rollActorId = args[0].actorId || game.users.get(args[0].destiny)?.character?.id;
           const request = {
-            id: args[0].destiny,
+            id: `${args[0].destiny}:${rollActorId}`,
             type: "destiny-roll",
+            actorId: rollActorId,
             light: args[0].light,
             dark: args[0].dark,
           };
 
           // make sure only one player destiny roll is queued.
-          if (!this.destinyQueue.find((q) => q.id === args[0].destiny) && CONFIG.FFG.DestinyGM === game.user.id) {
+          // CONFIG.FFG.DestinyGM is in-memory and lost on page refresh, so fall back to the active GM.
+          const isDesignatedGM = !CONFIG.FFG?.DestinyGM || CONFIG.FFG.DestinyGM === game.user.id;
+          if (!this.destinyQueue.find((q) => q.id === request.id) && isDesignatedGM) {
             this.destinyQueue.push(request);
           }
         }
@@ -256,18 +316,39 @@ export default class DestinyTracker extends FormApplication {
   async OnClickRollDestiny(event) {
     event.preventDefault();
     event.stopPropagation();
+
+    // Immediately fade out the roll button and fade in destiny points
+    const btn = document.getElementById("destinyRollButton");
+    const points = document.getElementById("destinyPoolPoints");
+    if (btn && points) {
+      $(btn).fadeOut(500);
+      $(points).css({ display: "flex", opacity: 0 }).animate({ opacity: 1 }, 500);
+    }
+
     if (!game.user.isGM) {
-      await game.socket.emit("system.starwarsffg", { canIRollDestiny: game.user.id });
+      const actor = await this._selectCharacterForDestinyRoll();
+      if (!actor) {
+        return;
+      }
+      await game.socket.emit("system.starwarsffg", { canIRollDestiny: game.user.id, actorId: actor.id });
     }
 
     if (game.user.isGM) {
       const roll = await this._rollDestiny();
-
+      const actorId = game.user.character?.id;
+      if (!actorId) {
+        ui.notifications.warn(game.i18n.localize("SWFFG.DestinyRollAssignCharacter"));
+        return;
+      }
+      const actor = game.actors.get(actorId);
+      const modifiers = actor ? this._getActorDestinyModifiers(actor) : { light: 0, dark: 0 };
+      const totalLight = roll.ffg.light + modifiers.light;
+      const totalDark = roll.ffg.dark + modifiers.dark;
+      await this._setActorDestiny(actorId, totalLight, totalDark);
       const light = await game.settings.get("starwarsffg", "dPoolLight");
       const dark = await game.settings.get("starwarsffg", "dPoolDark");
-
-      await game.settings.set("starwarsffg", "dPoolLight", light + roll.ffg.light);
-      await game.settings.set("starwarsffg", "dPoolDark", dark + roll.ffg.dark);
+      await game.settings.set("starwarsffg", "dPoolLight", light + totalLight);
+      await game.settings.set("starwarsffg", "dPoolDark", dark + totalDark);
     }
   }
 
@@ -283,7 +364,11 @@ export default class DestinyTracker extends FormApplication {
 
       switch (request.type) {
         case "destiny-roll": {
-          game.settings.set("starwarsffg", `destinyrollers${request.id}`, true);
+          const actorId = request.actorId || this._resolveCharacterActorIdForUser(request.id);
+          if (!actorId) {
+            break;
+          }
+          await this._setActorDestiny(actorId, request.light, request.dark);
           await game.settings.set("starwarsffg", "dPoolLight", light + request.light);
           await game.settings.set("starwarsffg", "dPoolDark", dark + request.dark);
           break;
@@ -312,5 +397,100 @@ export default class DestinyTracker extends FormApplication {
     });
 
     return roll;
+  }
+
+  async _setActorDestiny(actorId, light, dark) {
+    if (!actorId) {
+      return;
+    }
+    const actor = game.actors.get(actorId);
+    if (!actor || actor.type !== "character") {
+      return;
+    }
+    await actor.setFlag("starwarsffg", "destinyPips", {
+      light: Math.max(Number(light ?? 0), 0),
+      dark: Math.max(Number(dark ?? 0), 0),
+    });
+  }
+
+  _resolveCharacterActorIdForUser(userId) {
+    const user = game.users.get(userId);
+    if (user?.character?.id) {
+      return user.character.id;
+    }
+    if (!user) {
+      return null;
+    }
+    const ownedCharacter = game.actors.find((actor) => actor.type === "character" && actor.testUserPermission(user, CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER));
+    return ownedCharacter?.id;
+  }
+
+  _getActorDestinyModifiers(actor) {
+    let light = 0;
+    let dark = 0;
+    for (const item of actor.items) {
+      if (!item.system?.attributes) continue;
+      for (const attr of Object.values(item.system.attributes)) {
+        if (attr.modtype !== "Destiny Pool") continue;
+        const val = parseInt(attr.value, 10) || 0;
+        if (attr.mod === "Light") light += val;
+        else if (attr.mod === "Dark") dark += val;
+      }
+    }
+    return { light, dark };
+  }
+
+  _updateDestinyPosition(_sidebar, collapsed) {
+    const isCollapsed = typeof collapsed === "boolean" ? collapsed : (ui.sidebar?.collapsed ?? false);
+    const sidebarWidth = isCollapsed ? 25 : 300;
+    const centerLeft = (window.innerWidth - sidebarWidth) / 2;
+    const el = document.getElementById("destiny-tracker");
+    if (el) {
+      el.style.setProperty("left", `${centerLeft}px`, "important");
+      el.style.setProperty("transform", "translateX(-50%)", "important");
+    }
+  }
+
+  _showDestinyRollButton() {
+    this._rolledActorIds = new Set();
+    const ownedChars = this._getOwnedCharacterActors(game.user);
+    if (ownedChars.length === 0) return;
+    const btn = document.getElementById("destinyRollButton");
+    const points = document.getElementById("destinyPoolPoints");
+    if (points) $(points).fadeOut(500);
+    if (btn) $(btn).css({ display: "flex", opacity: 0 }).animate({ opacity: 1 }, 500);
+  }
+
+  _checkAndHideRollButton() {
+    const ownedChars = this._getOwnedCharacterActors(game.user);
+    if (ownedChars.length > 0 && ownedChars.every((actor) => this._rolledActorIds.has(actor.id) || this._hasRolled(actor))) {
+      const btn = document.getElementById("destinyRollButton");
+      const points = document.getElementById("destinyPoolPoints");
+      if (btn) $(btn).fadeOut(500);
+      if (points) $(points).css({ display: "flex", opacity: 0 }).animate({ opacity: 1 }, 500);
+    }
+  }
+
+  _hasRolled(actor) {
+    const pips = actor.getFlag("starwarsffg", "destinyPips");
+    return pips != null && (pips.light > 0 || pips.dark > 0);
+  }
+
+  _getOwnedCharacterActors(user) {
+    return game.actors.filter((actor) =>
+      actor.type === "character"
+      && actor.testUserPermission(user, CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER)
+    );
+  }
+
+  async _selectCharacterForDestinyRoll() {
+    const ownedCharacters = this._getOwnedCharacterActors(game.user)
+      .sort((a, b) => a.name.localeCompare(b.name));
+    if (ownedCharacters.length === 0) {
+      ui.notifications.warn(game.i18n.localize("SWFFG.DestinyRollNoOwnedCharacters"));
+      return null;
+    }
+    const unrolled = ownedCharacters.filter((a) => !this._hasRolled(a) && !this._rolledActorIds.has(a.id));
+    return unrolled[0] || null;
   }
 }

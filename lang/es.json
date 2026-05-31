@@ -15,6 +15,7 @@
   "TYPES.Item.gear": "Equipo",
   "TYPES.Item.itemattachment": "Accesorio",
   "TYPES.Item.itemmodifier": "Modificador objeto",
+  "TYPES.Item.moralitythreshold": "Umbral de Moralidad",
   "TYPES.Item.talent": "Talento",
   "TYPES.Item.shipattachment": "Accesorio nave",
   "TYPES.Item.shipweapon": "Arma nave",

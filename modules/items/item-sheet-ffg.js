@@ -151,6 +151,7 @@ export class ItemSheetFFG extends ItemSheet {
         this.position.height = 615;
         break;
       case "talent":
+      case "moralitythreshold":
         this.position.width = 405;
         this.position.height = 535;
         break;

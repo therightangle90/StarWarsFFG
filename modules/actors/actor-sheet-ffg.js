@@ -21,6 +21,7 @@ import {
 import {DicePoolFFG} from "../dice/pool.js";
 import {get_dice_pool} from "../helpers/dice-helpers.js";
 import {itemPillHover} from "../swffg-main.js";
+import {default_height, default_width} from "../config/ffg-sheetdefaults.js";
 
 export class ActorSheetFFG extends ActorSheet {
   constructor(...args) {
@@ -32,7 +33,6 @@ export class ActorSheetFFG extends ActorSheet {
     this._filters = {
       skills: new Set(),
     };
-    this.object.setFlag("starwarsffg", "config.enableEditMode", false);
   }
 
   pools = new Map();
@@ -42,11 +42,28 @@ export class ActorSheetFFG extends ActorSheet {
     return foundry.utils.mergeObject(super.defaultOptions, {
       classes: ["starwarsffg", "sheet", "actor"],
       template: "systems/starwarsffg/templates/actors/ffg-character-sheet.html",
-      width: 710,
-      height: 650,
+      width: default_width.character,
+      height: default_height.character,
+      submitOnClose: false,
       tabs: [{ navSelector: ".sheet-tabs", contentSelector: ".sheet-body", initial: "characteristics" }],
       scrollY: [".tableWithHeader", ".tab", ".skillsGrid", ".skillsTablesGrid"],
     });
+  }
+
+  getSheetOptionDefault(optionName, fallback) {
+    return fallback;
+  }
+
+  getSheetOptionValue(optionName, fallback) {
+    const configuredValue = this.object.getFlag("starwarsffg", `config.${optionName}`);
+    if (typeof configuredValue !== "undefined") {
+      return configuredValue;
+    }
+    return this.getSheetOptionDefault(optionName, fallback);
+  }
+
+  useEditModeSheetOption() {
+    return true;
   }
 
   /** @override */
@@ -186,6 +203,16 @@ export class ActorSheetFFG extends ActorSheet {
     const actorData = this.actor.toObject(false);
     data.actor = actorData;
     data.data = actorData.system;
+    data.data.characteristics = foundry.utils.deepClone(this.actor.system.characteristics);
+    data.data.stats.forcePool = foundry.utils.deepClone(this.actor.system.stats.forcePool);
+    data.hasForceRating = Number(this.actor.system.stats?.forcePool?.max ?? 0) >= 1;
+    const destinyPips = this.actor.getFlag("starwarsffg", "destinyPips") ?? {};
+    const lightPips = Math.max(Number(destinyPips.light ?? 0), 0);
+    const darkPips = Math.max(Number(destinyPips.dark ?? 0), 0);
+    data.destinyPipsIcons = [
+      ...Array.from({length: lightPips}, () => ({ type: "light", src: CONFIG.FFG.LIGHT_ICON })),
+      ...Array.from({length: darkPips}, () => ({ type: "dark", src: CONFIG.FFG.DARK_ICON })),
+    ];
     data.talentList = this.actor.talentList;
     data.rollData = this.actor.getRollData.bind(this.actor);
 
@@ -202,17 +229,23 @@ export class ActorSheetFFG extends ActorSheet {
     }
     data.FFG = CONFIG.FFG;
 
-    let autoSoakCalculation = true;
-
-    if (typeof this.actor.flags?.starwarsffg?.config?.enableAutoSoakCalculation === "undefined") {
-      autoSoakCalculation = game.settings.get("starwarsffg", "enableSoakCalc");
-    } else {
-      autoSoakCalculation = this.actor.flags?.starwarsffg?.config?.enableAutoSoakCalculation;
-    }
+    const autoSoakCalculation = this.getSheetOptionValue("enableAutoSoakCalculation", game.settings.get("starwarsffg", "enableSoakCalc"));
+    const enableObligation = this.getSheetOptionValue("enableObligation", true);
+    const enableDuty = this.getSheetOptionValue("enableDuty", true);
+    const enableMorality = this.getSheetOptionValue("enableMorality", true);
+    const enableConflict = this.getSheetOptionValue("enableConflict", true);
+    const enableEditMode = this.getSheetOptionValue("enableEditMode", false);
 
     data.settings = {
       enableSoakCalculation: autoSoakCalculation,
-      enableCriticalInjuries: this.actor.flags?.starwarsffg?.config?.enableCriticalInjuries,
+      enableCriticalInjuries: this.getSheetOptionValue("enableCriticalInjuries", false),
+    };
+    data.sheetConfig = {
+      enableObligation,
+      enableDuty,
+      enableMorality,
+      enableConflict,
+      enableEditMode,
     };
 
     // Establish sheet width and height using either saved persistent values or default values defined in swffg-config.js
@@ -291,15 +324,13 @@ export class ActorSheetFFG extends ActorSheet {
       data.data.skilllist = this._createSkillColumns(data);
     }
 
-    if (this.actor.flags?.config?.enableObligation === false && this.actor.flags?.config?.enableDuty === false && this.actor.flags?.config?.enableMorality === false && this.actor.flags?.config?.enableConflict === false) {
-      data.hideObligationDutyMoralityConflictTab = true;
-    }
     if (this.actor.flags?.starwarsffg?.xpLog) {
       data.xpLog = this.object.getFlag("starwarsffg", "xpLog") || [];
     }
 
     data.actor.items = ActorSheetFFG.sortForActorSheet(data.actor.items);
-    data.disabled = !this.object.getFlag("starwarsffg", "config.enableEditMode");
+    data.disabled = !enableEditMode;
+    data.isGM = game.user.isGM;
 
     data.modTypeSelected = "all"; // TODO: should this be something else?
     data.modifierTypes = CONFIG.FFG.allowableModifierTypes;
@@ -367,7 +398,7 @@ export class ActorSheetFFG extends ActorSheet {
         if (item.isEmbedded && item.parent.documentName === "Actor") {
           const actor = item.actor
           // we only allow one species and one career, find any other species and remove them.
-          if (item.type === "species" || item.type === "career") {
+          if (item.type === "species" || item.type === "career" || item.type === "moralitythreshold") {
             if (["character", "nemesis", "rival"].includes(actor.type)) {
               const itemToDelete = actor.items.filter((i) => (i.type === item.type) && (i.id !== item.id));
               itemToDelete.forEach((i) => {
@@ -390,7 +421,7 @@ export class ActorSheetFFG extends ActorSheet {
           }
 
           // Prevent adding of character data type items to vehicles
-          if (["career", "forcepower", "talent", "signatureability", "specialization", "species", "ability"].includes(item.type.toString()) && actor.type === "vehicle") {
+          if (["career", "forcepower", "talent", "signatureability", "specialization", "species", "ability", "moralitythreshold"].includes(item.type.toString()) && actor.type === "vehicle") {
             ui.notifications.warn(`Item type '${item.type}' cannot be added to 'vehicle' actor types.`);
             return false;
           }
@@ -540,12 +571,6 @@ export class ActorSheetFFG extends ActorSheet {
         type: "Boolean",
         default: true,
       });
-      this.sheetoptions.register("enableForcePool", {
-        name: game.i18n.localize("SWFFG.EnableForcePool"),
-        hint: game.i18n.localize("SWFFG.EnableForcePoolHint"),
-        type: "Boolean",
-        default: true,
-      });
     }
     if (this.actor.type === "character") {
       this.sheetoptions = new ActorOptions(this, html);
@@ -565,13 +590,13 @@ export class ActorSheetFFG extends ActorSheet {
         name: game.i18n.localize("SWFFG.EnableObligation"),
         hint: game.i18n.localize("SWFFG.EnableObligationHint"),
         type: "Boolean",
-        default: true,
+        default: this.getSheetOptionDefault("enableObligation", true),
       });
       this.sheetoptions.register("enableDuty", {
         name: game.i18n.localize("SWFFG.EnableDuty"),
         hint: game.i18n.localize("SWFFG.EnableDutyHint"),
         type: "Boolean",
-        default: true,
+        default: this.getSheetOptionDefault("enableDuty", true),
       });
       this.sheetoptions.register("enableMorality", {
         name: game.i18n.localize("SWFFG.EnableMorality"),
@@ -582,12 +607,6 @@ export class ActorSheetFFG extends ActorSheet {
       this.sheetoptions.register("enableConflict", {
         name: game.i18n.localize("SWFFG.EnableConflict"),
         hint: game.i18n.localize("SWFFG.EnableConflictHint"),
-        type: "Boolean",
-        default: true,
-      });
-      this.sheetoptions.register("enableForcePool", {
-        name: game.i18n.localize("SWFFG.EnableForcePool"),
-        hint: game.i18n.localize("SWFFG.EnableForcePoolHint"),
         type: "Boolean",
         default: true,
       });
@@ -645,12 +664,14 @@ export class ActorSheetFFG extends ActorSheet {
       });
     }
 
-    this.sheetoptions.register("enableEditMode", {
-      name: game.i18n.localize("SWFFG.EnableEditMode"),
-      hint: game.i18n.localize("SWFFG.EnableEditModeHint"),
-      type: "Boolean",
-      default: false,
-    });
+    if (this.useEditModeSheetOption()) {
+      this.sheetoptions.register("enableEditMode", {
+        name: game.i18n.localize("SWFFG.EnableEditMode"),
+        hint: game.i18n.localize("SWFFG.EnableEditModeHint"),
+        type: "Boolean",
+        default: this.getSheetOptionDefault("enableEditMode", false),
+      });
+    }
 
     html.find(".medical").click(async (ev) => {
       const item = await $(ev.currentTarget);
@@ -752,6 +773,10 @@ export class ActorSheetFFG extends ActorSheet {
     html.find(".items .item, .header-description-block .item, .injuries .item").click(async (ev) => {
       if (!$(ev.target).hasClass("fa-trash") && !$(ev.target).hasClass("fas") && !$(ev.target).hasClass("rollable")) {
         const li = $(ev.currentTarget);
+        // Morality Threshold pills are display-only in the header; clicking them should do nothing.
+        if (li.hasClass("moralitythreshold-pill")) {
+          return;
+        }
         if (ev?.originalEvent?.target && !$(ev?.originalEvent?.target).hasClass("item-pill")) {
           let itemId = li.data("itemId");
           let item = this.actor.items.get(itemId);
