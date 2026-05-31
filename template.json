@@ -42,6 +42,9 @@
             "value": 0,
             "adjusted": 0
           },
+          "level": {
+            "value": 1
+          },
           "defence": {
             "ranged": 0,
             "melee": 0,
@@ -597,7 +600,7 @@
   },
   "Item": {
     "types": [
-      "ability", "armour", "career", "criticaldamage", "criticalinjury", "forcepower", "gear", "itemattachment", "itemmodifier", "talent", "shipattachment", "shipweapon", "homesteadupgrade", "signatureability", "specialization", "species", "weapon"],
+      "ability", "armour", "career", "criticaldamage", "criticalinjury", "forcepower", "gear", "itemattachment", "itemmodifier", "moralitythreshold", "talent", "shipattachment", "shipweapon", "homesteadupgrade", "signatureability", "specialization", "species", "weapon"],
     "templates": {
       "core": {
         "description": "",
@@ -724,6 +727,12 @@
       },
       "isForceTalent": false,
       "isConflictTalent": false,
+      "tier": 1,
+      "trees": [],
+      "longDesc": ""
+    },
+    "moralitythreshold": {
+      "templates": ["core"],
       "tier": 1,
       "trees": [],
       "longDesc": ""

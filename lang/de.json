@@ -548,6 +548,7 @@
   "TYPES.Item.gear": "Ausrüstung",
   "TYPES.Item.itemattachment": "Gegenstand-Zubehör",
   "TYPES.Item.itemmodifier": "Gegenstand-Modifikator",
+  "TYPES.Item.moralitythreshold": "Moralitätsschwelle",
   "TYPES.Item.talent": "Talent",
   "TYPES.Item.shipattachment": "Schiffszubehör",
   "TYPES.Item.shipweapon": "Schiffsbewaffnung",

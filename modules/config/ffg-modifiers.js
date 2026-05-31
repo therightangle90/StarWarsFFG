@@ -204,6 +204,10 @@ export const allModifiersTypes = {
     "value": "Vehicle Stat",
     "label": "SWFFG.ModTypeStatVehicle",
   },
+  "Destiny Pool": {
+    "value": "Destiny Pool",
+    "label": "SWFFG.ModTypeDestinyPool",
+  },
 }
 
 /**
@@ -234,4 +238,8 @@ export const allModifiersMap = {
   "Skill Rank": foundry.utils.duplicate(skills),
   "Skill Remove Setback": foundry.utils.duplicate(skills),
   "Skill Setback": foundry.utils.duplicate(skills),
+  "Destiny Pool": {
+    "Light": { "value": "Light", "label": "SWFFG.DestinyPoolLight" },
+    "Dark": { "value": "Dark", "label": "SWFFG.DestinyPoolDark" },
+  },
 }
